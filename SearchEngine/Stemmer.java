@@ -22,6 +22,36 @@ public class Stemmer {
         return false;
     }
 
+    public boolean oRule(String kata) {
+        char hurufSebelum = '\0';
+        List<String> notations = new ArrayList<>();
+        for (char c : kata.toCharArray()) {
+            if (isVowel(c)) {
+                notations.add("v");
+                hurufSebelum = c;
+            } else if (!isVowel(hurufSebelum) && c == 'y') {
+                notations.add("v");
+                hurufSebelum = c;
+            } else {
+                notations.add("c");
+                hurufSebelum = c;
+            }
+        }
+
+        String hasil = ""; // cvcvcvcvc
+        for (int i = 0; i < notations.size(); i++) {
+            hasil += notations.get(i);
+        }
+
+        if (hasil.endsWith("cvc") && (kata.charAt(kata.length() - 1) != 'w'
+                || kata.charAt(kata.length() - 1) != 'x'
+                || kata.charAt(kata.length() - 1) != 'y')) {
+            return true;
+        }
+
+        return false;
+    }
+
     public String ubahKeVC(String kata) {
         char hurufSebelum = '\0';
         List<String> notations = new ArrayList<>();
@@ -98,31 +128,6 @@ public class Stemmer {
         return charList;
     }
 
-    // public List<String> step1Ba(, List<String> charList, String
-    // notation) {
-    // String last3Char = kata.substring(kata.length() - 3, kata.length());
-    // String last2Char = last3Char.substring(1);
-    // String sisaChar = kata.substring(0, kata.length() - 2);
-
-    // if (last3Char.equals("eed") && calculateMeasure(sisaChar) > 0) {
-    // charList.removeLast();
-    // } else if (last2Char.equals("ed") && ubahKeVC(kata.substring(0, kata.length()
-    // - 1)).contains("v")) {
-    // for (int i = 0; i < 2; i++) {
-    // charList.removeLast();
-    // }
-    // step1Bb(kata, charList);
-    // }
-
-    // else if (last3Char.equals("ing") && ubahKeVC(sisaChar).contains("v")) {
-    // for (int i = 0; i < 3; i++) {
-    // charList.removeLast();
-    // }
-    // step1Bb(kata, charList);
-    // }
-    // return charList;
-    // }
-
     public List<String> step1Ba(List<String> charList) {
         if (kata.endsWith("eed")) {
             String stem = kata.substring(0, kata.length() - 3);
@@ -154,9 +159,6 @@ public class Stemmer {
 
     public List<String> step1Bb(List<String> charList) {
         String last2Char = kata.substring(kata.length() - 2, kata.length());
-        // String last1Char = kata.charAt(kata.length() - 1) + "";
-        // String sisaChar2 = kata.substring(0, kata.length() - 1);
-        String sisaChar1 = kata.substring(0, kata.length() - 1);
 
         if (last2Char.equals("at")
                 || last2Char.equals("bl")
@@ -168,11 +170,9 @@ public class Stemmer {
                         || last2Char.charAt(1) == 'z')) {
             charList.removeLast();
         } else if (calculateMeasure(kata) == 1
-                && ubahKeVC(kata).endsWith("cvc")) {
-            char lastChar = kata.charAt(kata.length() - 1);
-            if (lastChar != 'w' && lastChar != 'x' && lastChar != 'y') {
-                charList.add("e");
-            }
+                && oRule(kata)) {
+            charList.add("e");
+
         }
         setKata(String.join("", charList));
         return charList;
@@ -463,7 +463,7 @@ public class Stemmer {
         }
         // jika measure=1, tidak berpola cvc, dan berakhiran e
         else if (measure == 1
-                && !ubahKeVC(sisaCharn).endsWith("cvc")
+                && !oRule(sisaCharn)
                 && kata.endsWith("e")) {
             charList.removeLast();
         }
@@ -489,6 +489,4 @@ public class Stemmer {
         setKata(String.join("", charList));
         return charList;
     }
-
-    
 }

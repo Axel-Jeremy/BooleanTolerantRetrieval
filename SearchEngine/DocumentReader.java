@@ -1,5 +1,9 @@
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DocumentReader {
     private String folderPath;
@@ -9,21 +13,15 @@ public class DocumentReader {
     }
 
     public Map<Integer, String> readAll() {
-        Map<Integer, String> documents = new LinkedHashMap<>();
+        Map<Integer, String> documents = new HashMap<>();
 
-        // for (int i = 1; i <= 100; i++) {
-        //     String filePath = folderPath + "/" + i + ".txt";
-        //     String content = readFile(filePath, i);
-        //     if (content != null) {
-        //         documents.put(i, content);
-        //     }
-        // }
-
-        String filePath = folderPath + "/" + 1 + ".txt";
-            String content = readFile(filePath, 1);
+        for (int i = 1; i <= 100; i++) {
+            String filePath = folderPath + "/" + i + ".txt";
+            String content = readFile(filePath, i);
             if (content != null) {
-                documents.put(1, content);
+                documents.put(i, content);
             }
+        }
 
         System.out.println("Berhasil membaca " + documents.size() + " dokumen.");
         return documents;
@@ -49,7 +47,7 @@ public class DocumentReader {
     }
 
     // public static void main(String[] args) {
-    //     DocumentReader reader = new DocumentReader("DataSet");
-    //     Map<Integer, String> docs = reader.readAll();
+    // DocumentReader reader = new DocumentReader("DataSet");
+    // Map<Integer, String> docs = reader.readAll();
     // }
 }

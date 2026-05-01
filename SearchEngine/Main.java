@@ -3,7 +3,7 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-        InvertedIndex invertedIndex = new InvertedIndex(null, null);
+        InvertedIndex invertedIndex = new InvertedIndex();
         Query query = new Query(sc.nextLine());
         //(not not not not alex and not not) or not
 
@@ -28,5 +28,6 @@ public class Main {
         //     }
         //     term.add(terms[i]);
         // }
+        sc.close();
     }
 }
