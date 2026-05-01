@@ -7,7 +7,7 @@ public class Stemmer {
     public Stemmer() {
     }
 
-    public void setKata(String kata){
+    public void setKata(String kata) {
         this.kata = kata;
     }
 
@@ -73,10 +73,16 @@ public class Stemmer {
 
     }
 
-    public void porterStemmer(String kata) {
+    public String porterStemmer(String kata) {
         setKata(kata);
         List<String> charList = wordToCharArray(kata);
-        System.out.println(step5b(step5a(step4(step3(step2(step1C(step1Ba(step1A(charList)))))))).toString());
+        List<String> stemmed = step5b(step5a(step4(step3(step2(step1C(step1Ba(step1A(charList))))))));
+        String res = "";
+        for (int i = 0; i < stemmed.size(); i++) {
+            res += stemmed.get(i);
+        }
+
+        return res;
     }
 
     public List<String> step1A(List<String> charList) {
@@ -139,7 +145,7 @@ public class Stemmer {
                 charList.removeLast();
                 setKata(String.join("", charList));
                 charList = step1Bb(charList);
-                
+
             }
         }
         setKata(String.join("", charList));
@@ -163,7 +169,10 @@ public class Stemmer {
             charList.removeLast();
         } else if (calculateMeasure(kata) == 1
                 && ubahKeVC(kata).endsWith("cvc")) {
-            charList.add("e");
+            char lastChar = kata.charAt(kata.length() - 1);
+            if (lastChar != 'w' && lastChar != 'x' && lastChar != 'y') {
+                charList.add("e");
+            }
         }
         setKata(String.join("", charList));
         return charList;
@@ -260,39 +269,39 @@ public class Stemmer {
             }
         }
 
-        else if(kata.endsWith("enci")
-            ||kata.endsWith("anci")
-        ||kata.endsWith("abli")) {
-            sisaCharn=kata.substring(0,kata.length()-4);
-            measure=calculateMeasure(sisaCharn);
-            if(measure > 0) {
+        else if (kata.endsWith("enci")
+                || kata.endsWith("anci")
+                || kata.endsWith("abli")) {
+            sisaCharn = kata.substring(0, kata.length() - 4);
+            measure = calculateMeasure(sisaCharn);
+            if (measure > 0) {
                 charList.removeLast();
                 charList.add("e");
             }
         }
 
-        else if(kata.endsWith("izer")||kata.endsWith("alli")) {
-            sisaCharn=kata.substring(0,kata.length()-4);
-            measure=calculateMeasure(sisaCharn);
-            if(measure > 0) {
+        else if (kata.endsWith("izer") || kata.endsWith("alli")) {
+            sisaCharn = kata.substring(0, kata.length() - 4);
+            measure = calculateMeasure(sisaCharn);
+            if (measure > 0) {
                 charList.removeLast();
             }
         }
 
-        else if(kata.endsWith("ator")) {
-            sisaCharn=kata.substring(0,kata.length()-4);
-            measure=calculateMeasure(sisaCharn);
-            if(measure > 0) {
+        else if (kata.endsWith("ator")) {
+            sisaCharn = kata.substring(0, kata.length() - 4);
+            measure = calculateMeasure(sisaCharn);
+            if (measure > 0) {
                 charList.removeLast();
                 charList.removeLast();
                 charList.add("e");
             }
         }
 
-        else if(kata.endsWith("eli")) {
-            sisaCharn=kata.substring(0,kata.length()-3);
-            measure=calculateMeasure(sisaCharn);
-            if(measure > 0) {
+        else if (kata.endsWith("eli")) {
+            sisaCharn = kata.substring(0, kata.length() - 3);
+            measure = calculateMeasure(sisaCharn);
+            if (measure > 0) {
                 charList.removeLast();
                 charList.removeLast();
             }
@@ -300,7 +309,6 @@ public class Stemmer {
         setKata(String.join("", charList));
         return charList;
     }
-
 
     public List<String> step3(List<String> charList) {
         String sisaCharn;
@@ -438,7 +446,7 @@ public class Stemmer {
                     charList.removeLast();
             }
         }
-        
+
         setKata(String.join("", charList));
         return charList;
     }
@@ -481,4 +489,6 @@ public class Stemmer {
         setKata(String.join("", charList));
         return charList;
     }
+
+    
 }
