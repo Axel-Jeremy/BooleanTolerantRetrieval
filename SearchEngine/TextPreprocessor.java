@@ -11,11 +11,10 @@ public class TextPreprocessor {
     }
 
     public List<String> process(String text) {
-        List<String> preprocessing = tokenizer.process(text);
-        preprocessing = stem(preprocessing);
-        return preprocessing;
+        List<String> result = tokenize(text);
+        result = stem(result);
+        return result;
     }
-
 
     private List<String> stem(List<String> terms) {
         List<String> res = new ArrayList<>();
@@ -23,6 +22,15 @@ public class TextPreprocessor {
             String stemmedWord = stemmer.porterStemmer(term);
             if (stemmedWord != null)
                 res.add(stemmedWord);
+        }
+        return res;
+    }
+
+    private List<String> tokenize(String tokens) {
+        List<String> res = new ArrayList<>();
+        List<String> terms = tokenizer.process(tokens);
+        while (terms != null) {
+            res.add(terms.removeFirst());
         }
         return res;
     }

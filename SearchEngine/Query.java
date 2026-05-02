@@ -5,19 +5,17 @@ import java.util.Stack;
 public class Query {
     String query;
     Stack<String> orderProcess;
-    Tokenizer tokenizer;
-    Stemmer stemmer;
+    TextPreprocessor preprocessor;
 
     public Query(String query) {
         this.query = query;
         this.query.trim();
         this.query.toLowerCase();
-        this.tokenizer = new Tokenizer();
-        this.stemmer = new Stemmer();
         this.orderProcess = new Stack<>();
+        this.preprocessor = new TextPreprocessor();
     }
 
-    public List<Integer> processQuery(){
+    public List<String> processQuery(){
         List<String> splittedQuery = splitQuery();
         
         for(String kata : splittedQuery){
@@ -25,9 +23,9 @@ public class Query {
                 orderProcess.push(kata);
             }
             else{
-                String temp = "";
+                String queryNoBracket = "";
                 while(!orderProcess.peek().equals("(")){
-                    temp = orderProcess.pop() + " " + temp;
+                    queryNoBracket = orderProcess.pop() + " " + queryNoBracket;
                     // (a and b and c)
                     //not a and b 
                     //term1 = not a
@@ -36,15 +34,17 @@ public class Query {
                 }
                 orderProcess.pop();
 
-                String[] terms = temp.trim().split(" ");
-
-                for (int i = 0; i < terms.length; i++) {
-                    if (!terms[i].equals("not")
-                    && !terms[i].equals("and")
-                    && !terms[i].equals("or")) {
-                        terms[i] = this.stemmer.porterStemmer(terms[i]);
+                String[] queries = queryNoBracket.trim().split(" ");
+                List<String> terms = new ArrayList<>();
+                for (int i = 0; i < queries.length; i++) {
+                    if (!queries[i].equals("not")
+                    && !queries[i].equals("and")
+                    && !queries[i].equals("or")) {
+                        List<String> res = preprocessor.process(queries[i]);
+                        for(String term : res) terms.add(term);
                     }
                 }
+                return terms;
             }
         }
         return null;
