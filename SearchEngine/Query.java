@@ -14,6 +14,7 @@ public class Query {
         this.query.toLowerCase();
         this.tokenizer = new Tokenizer();
         this.stemmer = new Stemmer();
+        this.orderProcess = new Stack<>();
     }
 
     public List<Integer> processQuery(){
@@ -26,16 +27,24 @@ public class Query {
             else{
                 String temp = "";
                 while(!orderProcess.peek().equals("(")){
-                    if (!orderProcess.peek().equals("not"))
-                    temp += orderProcess.pop() + " ";
+                    temp = orderProcess.pop() + " " + temp;
                     // (a and b and c)
                     //not a and b 
                     //term1 = not a
                     //term2 = b
                     //process(term1, term2);
                 }
+                orderProcess.pop();
 
-                
+                String[] terms = temp.trim().split(" ");
+
+                for (int i = 0; i < terms.length; i++) {
+                    if (!terms[i].equals("not")
+                    && !terms[i].equals("and")
+                    && !terms[i].equals("or")) {
+                        terms[i] = this.stemmer.porterStemmer(terms[i]);
+                    }
+                }
             }
         }
         return null;
