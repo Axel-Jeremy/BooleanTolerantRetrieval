@@ -2,16 +2,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Tokenizer {
-    private Stemmer stemmer;
-
     public Tokenizer() {
-        this.stemmer = new Stemmer();
     }
 
     public List<String> process(String text) {
         List<String> tokens = tokenize(text);
         tokens = caseFolding(tokens);
-        // tokens = stem(tokens);
         return tokens;
     }
 

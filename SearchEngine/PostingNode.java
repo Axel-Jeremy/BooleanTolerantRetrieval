@@ -5,7 +5,7 @@ public class PostingNode {
  
     public PostingNode(int docID) {
         this.docID = docID;
-        // this.next = null;
+        this.next = null;
         this.skip = null;
     }
 

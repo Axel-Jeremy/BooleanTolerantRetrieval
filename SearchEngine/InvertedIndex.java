@@ -23,6 +23,19 @@ public class InvertedIndex {
         return maxDocID;
     }
 
+    public boolean isDocIdExist(String term, int targetDocId) {
+        List<PostingNode> nodes = postingList.get(term);
+
+        if (nodes == null)
+            return false;
+
+        for (PostingNode node : nodes) {
+            if (node.getDocID() == targetDocId)
+                return true;
+        }
+        return false;
+    }
+
     public void addDocument(String term, int docID) {
         if (!postingList.containsKey(term)) {
             List<PostingNode> newList = new LinkedList<>();
@@ -30,11 +43,10 @@ public class InvertedIndex {
             postingList.put(term, newList);
             postingLengths.put(term, postingLengths.getOrDefault(term, 0) + 1);
         } else {
-            if (!postingList.get(term).contains(docID)) {
+            if (!isDocIdExist(term, docID)) {
                 postingList.get(term).getLast().setNext(new PostingNode(docID));
             }
         }
-
         maxDocID = Math.max(maxDocID, docID);
     }
 
