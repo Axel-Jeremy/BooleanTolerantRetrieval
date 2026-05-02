@@ -7,18 +7,28 @@ import java.util.Map;
 public class InvertedIndex {
     private Map<String, List<PostingNode>> postingList;
     private HashMap<String, Integer> postingLengths;
-    private static int maxDocID;
-    
+    private int maxDocID;
+
     public InvertedIndex() {
         this.postingList = new HashMap<>();
+        this.postingLengths = new HashMap<>();
         maxDocID = 0;
     }
 
+    public List<PostingNode> getPostingList(String term) {
+        return postingList.getOrDefault(term, new ArrayList<>());
+    }
+
+    public int getMaxDocID() {
+        return maxDocID;
+    }
+
     public void addDocument(String term, int docID) {
-        if (postingList.containsKey(term)) {
+        if (!postingList.containsKey(term)) {
             List<PostingNode> newList = new LinkedList<>();
             newList.add(new PostingNode(docID));
             postingList.put(term, newList);
+            postingLengths.put(term, postingLengths.getOrDefault(term, 0) + 1);
         } else {
             if (!postingList.get(term).contains(docID)) {
                 postingList.get(term).getLast().setNext(new PostingNode(docID));
@@ -85,94 +95,4 @@ public class InvertedIndex {
         }
     }
 
-    public List<PostingNode> intersects(List<String> terms){
-        terms.sort(null);
-
-        List<PostingNode> res = postingList.get(terms.removeFirst());
-        while(!terms.equals(null)){
-            res = intersect(res.getFirst(), postingList.get(terms.removeFirst()).getFirst());
-        }
-        return res;
-    }
-
-    // AND
-    public List<PostingNode> intersect(PostingNode p1, PostingNode p2) {
-        List<PostingNode> answer = new ArrayList<>();
-
-        while (p1 != null && p2 != null) {
-            int doc1 = p1.getDocID();
-            int doc2 = p2.getDocID();
-
-            if (doc1 == doc2) {
-                answer.add(p1);
-                p1 = p1.getNext();
-                p2 = p2.getNext();
-            } else if (doc1 < doc2) {
-                if (p1.getSkip() != null
-                        && p1.getSkip().getDocID() < p2.getDocID()) {
-                    p1 = p1.getSkip();
-                }
-                p1 = p1.getNext();
-            } else {
-                if (p2.getSkip() != null
-                        && p2.getSkip().getDocID() < p1.getDocID()) {
-                    p2 = p2.getSkip();
-                }
-                p2 = p2.getNext();
-            }
-        }
-        return answer;
-    }
-
-    // OR
-    public List<Integer> union(PostingNode p1, PostingNode p2) {
-        List<Integer> answer = new ArrayList<>();
-
-        while (p1 != null && p2 != null) {
-            int doc1 = p1.getDocID();
-            int doc2 = p2.getDocID();
-
-            if (doc1 == doc2) {
-                if (!answer.contains(p1.getDocID())) {
-                    answer.add(p1.getDocID());
-                }
-                p1 = p1.getNext();
-                p2 = p2.getNext();
-            } else if (doc1 < doc2) {
-                if (!answer.contains(p1.getDocID())) {
-                    answer.add(p1.getDocID());
-                }
-                p1 = p1.getNext();
-            } else {
-                if (!answer.contains(p2.getDocID())) {
-                    answer.add(p2.getDocID());
-                }
-                p2 = p2.getNext();
-            }
-        }
-        while (p1 != null) {
-            answer.add(p1.getDocID());
-            p1 = p1.getNext();
-        }
-        while (p2 != null) {
-            answer.add(p2.getDocID());
-            p2 = p2.getNext();
-        }
-
-        return answer;
-    }
-
-    public List<Integer> negate(PostingNode p1) {
-        List<Integer> result = new ArrayList<>();
- 
-        int j = p1.getDocID();
-        for(int i = 1; i <= maxDocID; i++){
-            if(i != j) result.add(i);
-            if(i >= j) {
-                j = p1.getNext().getDocID();
-                p1 = p1.getNext();
-            } 
-        }
-        return result;
-    }
 }
