@@ -3,51 +3,89 @@ import java.util.List;
 import java.util.Stack;
 
 public class Query {
-    String query;
-    Stack<String> orderProcess;
-    TextPreprocessor preprocessor;
+    private String query;
+    private Stack<String> orderProcess;
+    private Stack<List<PostingNode>> resultStack;
+    private TextPreprocessor preprocessor;
+    private BooleanModel model;
+    private static InvertedIndex invertedIndex;
 
     public Query(String query) {
-        this.query = query;
-        this.query.trim();
-        this.query.toLowerCase();
+        this.query = query.trim().toLowerCase();
         this.orderProcess = new Stack<>();
+        this.resultStack = new Stack<>();
         this.preprocessor = new TextPreprocessor();
+        this.model = new BooleanModel();
     }
 
-    public List<String> processQuery(){
+    public void setInvertedIndex(InvertedIndex invertedIndex) {
+        this.invertedIndex = invertedIndex;
+    }
+
+    public List<PostingNode> processQuery(List<String> terms) {
+        return model.process(terms);
+    }
+
+    public List<PostingNode> preProcess() {
         List<String> splittedQuery = splitQuery();
-        
-        for(String kata : splittedQuery){
-            if(kata.charAt(0) != ')'){
+        List<String> terms = null;
+        for (String kata : splittedQuery) {
+            if (kata.charAt(0) != ')') {
                 orderProcess.push(kata);
-            }
-            else{
+            } else {
                 String queryNoBracket = "";
-                while(!orderProcess.peek().equals("(")){
+                while (!orderProcess.peek().equals("(")) {
                     queryNoBracket = orderProcess.pop() + " " + queryNoBracket;
-                    // (a and b and c)
-                    //not a and b 
-                    //term1 = not a
-                    //term2 = b
-                    //process(term1, term2);
                 }
                 orderProcess.pop();
 
-                String[] queries = queryNoBracket.trim().split(" ");
-                List<String> terms = new ArrayList<>();
+                String[] queries = queryNoBracket.trim().split("\\s+");
+                terms = new ArrayList<>();
+
                 for (int i = 0; i < queries.length; i++) {
                     if (!queries[i].equals("not")
-                    && !queries[i].equals("and")
-                    && !queries[i].equals("or")) {
+                            && !queries[i].equals("and")
+                            && !queries[i].equals("or")) {
                         List<String> res = preprocessor.process(queries[i]);
-                        for(String term : res) terms.add(term);
+                        for (String term : res)
+                            terms.add(term);
+                    } else {
+                        terms.add(queries[i]);
                     }
                 }
-                return terms;
+
+                // process sub bagian query, taro
+                resultStack.push(processQuery(terms));
             }
         }
-        return null;
+
+        // jika order process masih ada isi
+        if (!this.orderProcess.isEmpty()) {
+            String queryNoBracket = "";
+            while (!orderProcess.isEmpty()) {
+                queryNoBracket = orderProcess.pop() + " " + queryNoBracket;
+            }
+
+            String[] queries = queryNoBracket.trim().split("\\s+");
+            terms = new ArrayList<>();
+
+            for (int i = 0; i < queries.length; i++) {
+                if (!queries[i].equals("not")
+                        && !queries[i].equals("and")
+                        && !queries[i].equals("or")) {
+                    List<String> res = preprocessor.process(queries[i]);
+                    for (String term : res)
+                        terms.add(term);
+                } else {
+                    terms.add(queries[i]);
+                }
+            }
+
+            // process, simpen
+        }
+
+        return resultStack.isEmpty() ? new ArrayList<>() : resultStack.pop();
+
     }
 
     public List<String> splitQuery() {
