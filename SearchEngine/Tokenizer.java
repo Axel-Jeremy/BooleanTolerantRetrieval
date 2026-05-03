@@ -14,7 +14,10 @@ public class Tokenizer {
     private List<String> tokenize(String text) {
         List<String> tokens = new ArrayList<>();
 
-        String cleaned = text.replaceAll("[^a-zA-Z]", " ");
+        // ngubah non alphabet jadi spasi
+        String cleaned = text.replaceAll("[^a-zA-Z ]", ""); 
+
+        //berguna untuk menghapus semua whitespace baik dari spasi, tab, ataupun newLine
         String[] words = cleaned.split("\\s+");
         for (String word : words) {
             if (!word.isEmpty()) {
