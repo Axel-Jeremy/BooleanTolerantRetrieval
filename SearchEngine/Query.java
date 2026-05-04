@@ -18,13 +18,17 @@ public class Query {
         this.model = new BooleanModel();
     }
 
+    public void setModel(BooleanModel model) {
+        this.model = model;
+    }
+
     public void setInvertedIndex(InvertedIndex invertedIndex) {
         this.invertedIndex = invertedIndex;
     }
 
-    public List<PostingNode> processQuery(List<String> terms) {
-        return model.process(terms);
-    }
+    // public List<PostingNode> processQuery(List<String> terms) {
+    // return model.process(terms);
+    // }
 
     public List<PostingNode> preProcess() {
         List<String> splittedQuery = splitQuery();
@@ -54,17 +58,33 @@ public class Query {
                     }
                 }
 
+                boolean startsWithOperator = !terms.isEmpty()
+                        && (terms.get(0).equals("and")
+                                || terms.get(0).equals("or")
+                                || terms.get(0).equals("not"));
+
+                if (startsWithOperator && !resultStack.isEmpty()) {
+                    List<PostingNode> prevResult = resultStack.pop();
+                    resultStack.push(model.process(terms, prevResult));
+                } else {
+                    resultStack.push(model.process(terms));
+                }
+
                 // process sub bagian query, taro
-                resultStack.push(processQuery(terms));
+                // resultStack.push(processQuery(terms));
             }
         }
 
         // jika order process masih ada isi
         if (!this.orderProcess.isEmpty()) {
-            String queryNoBracket = "";
+            // Kumpulkan semua sisa token dengan urutan yang benar
+            List<String> remaining = new ArrayList<>();
             while (!orderProcess.isEmpty()) {
-                queryNoBracket = orderProcess.pop() + " " + queryNoBracket;
+                remaining.add(0, orderProcess.pop()); // insert di depan agar urutan terjaga
             }
+
+            // Gabungkan jadi string
+            String queryNoBracket = String.join(" ", remaining);
 
             String[] queries = queryNoBracket.trim().split("\\s+");
             terms = new ArrayList<>();
@@ -82,6 +102,13 @@ public class Query {
             }
 
             // process, simpen
+            if (!resultStack.isEmpty()) {
+                List<PostingNode> prevResult = resultStack.pop();
+                resultStack.push(model.process(terms, prevResult));
+            } else {
+                resultStack.push(model.process(terms));
+            }
+
         }
 
         return resultStack.isEmpty() ? new ArrayList<>() : resultStack.pop();

@@ -5,12 +5,73 @@ public class BooleanModel {
     private static InvertedIndex invertedIndex;
     private static int maxDocID;
 
-    public BooleanModel(){
-        maxDocID = 0;
+    public BooleanModel() {
+        // maxDocID = 0;
+    }
+
+    public void setMaxDocID(int maxDocID) {
+        BooleanModel.maxDocID = maxDocID;
     }
 
     public void setInvertedIndex(InvertedIndex invertedIndex) {
         this.invertedIndex = invertedIndex;
+    }
+
+    public List<PostingNode> process(List<String> preProcessedQuery,
+            List<PostingNode> prevResult) {
+        List<PostingNode> result = prevResult;
+        String pendingOperator = null;
+
+        // Kasus khusus: [not] sendirian → negate prevResult
+        if (preProcessedQuery.size() == 1 && preProcessedQuery.get(0).equals("not")) {
+            return assignPointer(negate(result.getFirst()));
+        }
+
+        int i = 0;
+        while (i < preProcessedQuery.size()) {
+            String token = preProcessedQuery.get(i);
+
+            if (token.equals("and") || token.equals("or")) {
+                pendingOperator = token;
+                i++;
+                continue;
+            }
+
+            List<PostingNode> current;
+
+            if (token.equals("not")) {
+                // Ambil term berikutnya lalu negate
+                i++;
+                String term = preProcessedQuery.get(i);
+                PostingNode p = invertedIndex.getPostingList(term).getFirst();
+                current = assignPointer(negate(p)); // ← NOT dieksekusi dengan benar
+            } else {
+                current = invertedIndex.getPostingList(token);
+            }
+
+            if (result == null || result.isEmpty()) {
+                result = current;
+            } else if (current == null || current.isEmpty()) {
+                // current kosong → hasil operasi tergantung operator
+                if ("or".equals(pendingOperator)) {
+                    // OR dengan kosong → result tetap
+                } else {
+                    // AND dengan kosong → hasil kosong
+                    result = new ArrayList<>();
+                }
+            } else {
+                if ("or".equals(pendingOperator)) {
+                    result = assignPointer(union(result.getFirst(), current.getFirst()));
+                } else {
+                    result = assignPointer(intersect(result.getFirst(), current.getFirst()));
+                }
+                pendingOperator = null;
+                i++;
+            }
+
+        }
+
+        return result != null ? result : new ArrayList<>();
     }
 
     public List<PostingNode> process(List<String> preProcessedQuery) {
@@ -25,25 +86,31 @@ public class BooleanModel {
 
         if (!preProcessedQuery.contains("not")
                 && !preProcessedQuery.contains("or")) {
-            return intersects(preProcessedQuery);
+            List<String> terms = preProcessedQuery.stream()
+                    .filter(s -> !s.equals("and"))
+                    .collect(java.util.stream.Collectors.toList());
+            return intersects(terms);
         } else if (!preProcessedQuery.contains("not")
                 && !preProcessedQuery.contains("and")) {
-            return unions(preProcessedQuery);
+            List<String> terms = preProcessedQuery.stream()
+                    .filter(s -> !s.equals("and"))
+                    .collect(java.util.stream.Collectors.toList());
+            return unions(terms);
         }
 
         // while (!preProcessedQuery.isEmpty()) {
-        //     String p1 = preProcessedQuery.removeFirst();
-        //     String kueri = preProcessedQuery.removeFirst();
-        //     String p2 = preProcessedQuery.removeFirst();
-        //     // (... and not ... and ... and ...) -> intersects if not contains OR
-        //     // (... and ... or ...) -> intersect if contains OR
-        //     if (p1.equals("not")) {
-                
-        //     }
+        // String p1 = preProcessedQuery.removeFirst();
+        // String kueri = preProcessedQuery.removeFirst();
+        // String p2 = preProcessedQuery.removeFirst();
+        // // (... and not ... and ... and ...) -> intersects if not contains OR
+        // // (... and ... or ...) -> intersect if contains OR
+        // if (p1.equals("not")) {
+
+        // }
         // }
         // return toList(result);
 
-        //contoh kasus
+        // contoh kasus
         /*
          * Query: "axel and not alek or budi"
          * 
@@ -81,8 +148,12 @@ public class BooleanModel {
                 current = invertedIndex.getPostingList(token);
             }
 
-            if (result == null) {
+            if (result == null || result.isEmpty()) {
                 result = current;
+            } else if (current == null || current.isEmpty()) {
+                if (!"or".equals(pendingOperator)) {
+                    result = new ArrayList<>();
+                }
             } else {
                 if ("or".equals(pendingOperator)) {
                     // union menghasilkan list baru → perlu assignPointer
@@ -133,11 +204,16 @@ public class BooleanModel {
     }
 
     public List<PostingNode> intersects(List<String> terms) {
-        terms.sort((a, b) -> invertedIndex.getPostingList(a).size() - invertedIndex.getPostingList(b).size()); //sort dari posting list yang paling pendek
+        terms.sort((a, b) -> invertedIndex.getPostingList(a).size() - invertedIndex.getPostingList(b).size());
 
+        // System.out.println("Intersects terms: " + terms);
         List<PostingNode> res = invertedIndex.getPostingList(terms.removeFirst());
+
+        // System.out.println("Posting list pertama size: " + res.size());
+
         while (!terms.isEmpty()) {
             res = intersect(res.getFirst(), invertedIndex.getPostingList(terms.removeFirst()).getFirst());
+            // System.out.println("Hasil intersect size: " + res.size());
         }
         return res;
     }
@@ -149,12 +225,14 @@ public class BooleanModel {
         while (p1 != null && p2 != null) {
             int doc1 = p1.getDocID();
             int doc2 = p2.getDocID();
-            //axel : 1 -> 5 -> 7
-            //alek : 1 -> 7
 
-            //axel and alek
-            //res =  1 -> 7
-            
+            // System.out.println("Membandingkan doc1=" + doc1 + " dengan doc2=" + doc2);
+            // axel : 1 -> 5 -> 7
+            // alek : 1 -> 7
+
+            // axel and alek
+            // res = 1 -> 7
+
             if (doc1 == doc2) {
                 answer.add(new PostingNode(p1.getDocID()));
                 p1 = p1.getNext();
