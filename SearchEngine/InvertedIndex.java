@@ -44,7 +44,10 @@ public class InvertedIndex {
             postingLengths.put(term, postingLengths.getOrDefault(term, 0) + 1);
         } else {
             if (!isDocIdExist(term, docID)) {
-                postingList.get(term).getLast().setNext(new PostingNode(docID));
+                PostingNode newNode = new PostingNode(docID);
+                postingList.get(term).getLast().setNext(newNode); // hubungkan via linked list
+                postingList.get(term).add(newNode); // ← tambah ke List juga
+                postingLengths.put(term, postingLengths.get(term) + 1);
             }
         }
         maxDocID = Math.max(maxDocID, docID);
@@ -52,7 +55,11 @@ public class InvertedIndex {
 
     public void assignSkipPointer() {
         for (String term : postingList.keySet()) {
-            int length = postingLengths.get(term);
+            // Hitung panjang aktual dengan traverse linked list
+            int length = postingList.get(term).size();
+
+            if (length < 3)
+                continue; // skip pointer tidak berguna untuk list pendek
 
             int skipInterval = (int) Math.sqrt(length);
 

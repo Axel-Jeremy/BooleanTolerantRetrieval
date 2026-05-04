@@ -29,7 +29,9 @@ public class TextPreprocessor {
     private List<String> tokenize(String tokens) {
         List<String> res = new ArrayList<>();
         List<String> terms = tokenizer.process(tokens);
-        while (terms != null) {
+        if (terms == null)
+            return res;
+        while (!terms.isEmpty()) { // ← cek isEmpty(), bukan != null
             res.add(terms.removeFirst());
         }
         return res;

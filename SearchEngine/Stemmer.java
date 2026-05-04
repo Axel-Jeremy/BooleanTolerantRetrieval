@@ -179,6 +179,7 @@ public class Stemmer {
     }
 
     public List<String> step1C(List<String> charList) {
+        if(kata.length() < 1) return charList;
         if (ubahKeVC(kata.substring(0, kata.length() - 1)).contains("v")
                 && kata.charAt(kata.length() - 1) == 'y') {
             charList.removeLast();
@@ -240,6 +241,7 @@ public class Stemmer {
         }
 
         else if (kata.endsWith("entli") || kata.endsWith("ousli")) {
+            
             sisaCharn = kata.substring(0, kata.length() - 5);
             measure = calculateMeasure(sisaCharn);
             if (measure > 0) {
@@ -249,6 +251,7 @@ public class Stemmer {
         }
 
         else if (kata.endsWith("ation") || kata.endsWith("iviti")) {
+            
             sisaCharn = kata.substring(0, kata.length() - 5);
             measure = calculateMeasure(sisaCharn);
             if (measure > 0) {
@@ -260,6 +263,7 @@ public class Stemmer {
         }
 
         else if (kata.endsWith("alism") || kata.endsWith("aliti")) {
+            
             sisaCharn = kata.substring(0, kata.length() - 5);
             measure = calculateMeasure(sisaCharn);
             if (measure > 0) {
@@ -272,6 +276,7 @@ public class Stemmer {
         else if (kata.endsWith("enci")
                 || kata.endsWith("anci")
                 || kata.endsWith("abli")) {
+            
             sisaCharn = kata.substring(0, kata.length() - 4);
             measure = calculateMeasure(sisaCharn);
             if (measure > 0) {
@@ -281,6 +286,7 @@ public class Stemmer {
         }
 
         else if (kata.endsWith("izer") || kata.endsWith("alli")) {
+            
             sisaCharn = kata.substring(0, kata.length() - 4);
             measure = calculateMeasure(sisaCharn);
             if (measure > 0) {
@@ -289,6 +295,7 @@ public class Stemmer {
         }
 
         else if (kata.endsWith("ator")) {
+            
             sisaCharn = kata.substring(0, kata.length() - 4);
             measure = calculateMeasure(sisaCharn);
             if (measure > 0) {
@@ -315,6 +322,7 @@ public class Stemmer {
         int measure;
 
         if (kata.endsWith("ousness")) {
+            if (kata.length() < 7) return charList;
             sisaCharn = kata.substring(0, kata.length() - 7);
 
             measure = calculateMeasure(sisaCharn);
@@ -328,6 +336,7 @@ public class Stemmer {
         else if (kata.endsWith("icate")
                 || kata.endsWith("alize")
                 || kata.endsWith("iciti")) {
+            
             sisaCharn = kata.substring(0, kata.length() - 5);
             measure = calculateMeasure(sisaCharn);
 
@@ -337,6 +346,7 @@ public class Stemmer {
                 }
             }
         } else if (kata.endsWith("ative")) {
+            
             sisaCharn = kata.substring(0, kata.length() - 5);
             measure = calculateMeasure(sisaCharn);
 
@@ -346,6 +356,7 @@ public class Stemmer {
                 }
             }
         } else if (kata.endsWith("ical")) {
+            
             sisaCharn = kata.substring(0, kata.length() - 4);
             measure = calculateMeasure(sisaCharn);
             // ical hapus al
@@ -356,6 +367,7 @@ public class Stemmer {
         }
 
         else if (kata.endsWith("ness")) {
+            
             sisaCharn = kata.substring(0, kata.length() - 4);
             measure = calculateMeasure(sisaCharn);
             if (measure > 0) {
@@ -366,6 +378,7 @@ public class Stemmer {
         }
 
         else if (kata.endsWith("ful")) {
+            if (kata.length() < 3) return charList;
             sisaCharn = kata.substring(0, kata.length() - 3);
             measure = calculateMeasure(sisaCharn);
             // ful hapus ful nya semua
@@ -384,6 +397,7 @@ public class Stemmer {
         int measure;
 
         if (kata.endsWith("ement")) {
+            
             sisaCharn = kata.substring(0, kata.length() - 5);
             measure = calculateMeasure(sisaCharn);
             // ement hapus ement nya semua
@@ -396,6 +410,7 @@ public class Stemmer {
                 || kata.endsWith("able")
                 || kata.endsWith("ible")
                 || kata.endsWith("ment")) {
+            
             sisaCharn = kata.substring(0, kata.length() - 4);
             measure = calculateMeasure(sisaCharn);
 
@@ -455,6 +470,7 @@ public class Stemmer {
         String sisaCharn;
         int measure;
 
+        if (kata.length() < 1) return charList;
         // jika berakhiran e dan m>1 hapus
         sisaCharn = kata.substring(0, kata.length() - 1);
         measure = calculateMeasure(sisaCharn);
@@ -475,6 +491,8 @@ public class Stemmer {
         String sisaCharn;
         String lastDoubleChar;
         int measure;
+
+        if (kata.length() < 2) return charList;
 
         sisaCharn = kata.substring(0, kata.length() - 1);
         lastDoubleChar = kata.substring(kata.length() - 2, kata.length());
