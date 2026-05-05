@@ -1,10 +1,11 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 public class Query {
     private String query;
-    private Stack<String> orderProcess;
     private Stack<List<PostingNode>> resultStack;
     private TextPreprocessor preprocessor;
     private BooleanModel model;
@@ -12,7 +13,6 @@ public class Query {
 
     public Query(String query) {
         this.query = query.trim().toLowerCase();
-        this.orderProcess = new Stack<>();
         this.resultStack = new Stack<>();
         this.preprocessor = new TextPreprocessor();
         this.model = new BooleanModel();
@@ -23,95 +23,135 @@ public class Query {
     }
 
     public void setInvertedIndex(InvertedIndex invertedIndex) {
-        this.invertedIndex = invertedIndex;
+        Query.invertedIndex = invertedIndex;
     }
 
     // public List<PostingNode> processQuery(List<String> terms) {
     // return model.process(terms);
     // }
+    private static final Map<String, Integer> ORDER = new HashMap<>();
+    static {
+        ORDER.put("OR", 1);
+        ORDER.put("AND", 2);
+        ORDER.put("NOT", 3);
+    }
+
+    public boolean isOperator(String kata) {
+        return kata.equals("and") || kata.equals("or") || kata.equals("not");
+    }
 
     public List<PostingNode> preProcess() {
         List<String> splittedQuery = splitQuery();
         List<String> terms = null;
+
+        Stack<String> orderProcess = new Stack<>();
+        Stack<String> operator = new Stack<>();
+
         for (String kata : splittedQuery) {
-            if (kata.charAt(0) != ')') {
-                orderProcess.push(kata);
-            } else {
-                String queryNoBracket = "";
-                while (!orderProcess.peek().equals("(")) {
-                    queryNoBracket = orderProcess.pop() + " " + queryNoBracket;
+            if (kata.charAt(0) == '(') {
+                operator.push(kata);
+            } else if (kata.equals(")")) {
+                while (!operator.isEmpty() && !operator.peek().equals("(")) {
+                    orderProcess.push(operator.pop());
                 }
-                orderProcess.pop();
-
-                String[] queries = queryNoBracket.trim().split("\\s+");
-                terms = new ArrayList<>();
-
-                for (int i = 0; i < queries.length; i++) {
-                    if (!queries[i].equals("not")
-                            && !queries[i].equals("and")
-                            && !queries[i].equals("or")) {
-                        List<String> res = preprocessor.process(queries[i]);
-                        for (String term : res)
-                            terms.add(term);
-                    } else {
-                        terms.add(queries[i]);
-                    }
+                operator.push(kata);
+            } else if (isOperator(kata)) {
+                while (!operator.isEmpty()
+                        && isOperator(operator.peek())
+                        && ORDER.get(operator.peek()) >= ORDER.get(kata)) {
+                    orderProcess.push(operator.pop());
                 }
-
-                boolean startsWithOperator = !terms.isEmpty()
-                        && (terms.get(0).equals("and")
-                                || terms.get(0).equals("or")
-                                || terms.get(0).equals("not"));
-
-                if (startsWithOperator && !resultStack.isEmpty()) {
-                    List<PostingNode> prevResult = resultStack.pop();
-                    resultStack.push(model.process(terms, prevResult));
-                } else {
-                    resultStack.push(model.process(terms));
-                }
-
-                // process sub bagian query, taro
-                // resultStack.push(processQuery(terms));
+                operator.push(kata);
             }
         }
 
-        // jika order process masih ada isi
-        if (!this.orderProcess.isEmpty()) {
-            // Kumpulkan semua sisa token dengan urutan yang benar
-            List<String> remaining = new ArrayList<>();
-            while (!orderProcess.isEmpty()) {
-                remaining.add(0, orderProcess.pop()); // insert di depan agar urutan terjaga
-            }
-
-            // Gabungkan jadi string
-            String queryNoBracket = String.join(" ", remaining);
-
-            String[] queries = queryNoBracket.trim().split("\\s+");
-            terms = new ArrayList<>();
-
-            for (int i = 0; i < queries.length; i++) {
-                if (!queries[i].equals("not")
-                        && !queries[i].equals("and")
-                        && !queries[i].equals("or")) {
-                    List<String> res = preprocessor.process(queries[i]);
-                    for (String term : res)
-                        terms.add(term);
-                } else {
-                    terms.add(queries[i]);
-                }
-            }
-
-            // process, simpen
-            if (!resultStack.isEmpty()) {
-                List<PostingNode> prevResult = resultStack.pop();
-                resultStack.push(model.process(terms, prevResult));
-            } else {
-                resultStack.push(model.process(terms));
-            }
-
+         while (!operator.isEmpty()) {
+            orderProcess.add(operator.pop());
         }
 
-        return resultStack.isEmpty() ? new ArrayList<>() : resultStack.pop();
+        // return new ArrayList<>(orderProcess);
+        return null;
+        // List<String> splittedQuery = splitQuery();
+        // List<String> terms = null;
+        // for (String kata : splittedQuery) {
+        // if (kata.charAt(0) != ')') {
+        // orderProcess.push(kata);
+        // } else {
+        // String queryNoBracket = "";
+        // while (!orderProcess.peek().equals("(")) {
+        // queryNoBracket = orderProcess.pop() + " " + queryNoBracket;
+        // }
+        // orderProcess.pop();
+
+        // String[] queries = queryNoBracket.trim().split("\\s+");
+        // terms = new ArrayList<>();
+
+        // for (int i = 0; i < queries.length; i++) {
+        // if (!queries[i].equals("not")
+        // && !queries[i].equals("and")
+        // && !queries[i].equals("or")) {
+        // List<String> res = preprocessor.process(queries[i]);
+        // for (String term : res)
+        // terms.add(term);
+        // } else {
+        // terms.add(queries[i]);
+        // }
+        // }
+
+        // boolean startsWithOperator = !terms.isEmpty()
+        // && (terms.get(0).equals("and")
+        // || terms.get(0).equals("or")
+        // || terms.get(0).equals("not"));
+
+        // if (startsWithOperator && !resultStack.isEmpty()) {
+        // List<PostingNode> prevResult = resultStack.pop();
+        // resultStack.push(model.process(terms, prevResult));
+        // } else {
+        // resultStack.push(model.process(terms));
+        // }
+
+        // // process sub bagian query, taro
+        // // resultStack.push(processQuery(terms));
+        // }
+        // }
+
+        // // jika order process masih ada isi
+        // if (!this.orderProcess.isEmpty()) {
+        // // Kumpulkan semua sisa token dengan urutan yang benar
+        // List<String> remaining = new ArrayList<>();
+        // while (!orderProcess.isEmpty()) {
+        // remaining.add(0, orderProcess.pop()); // insert di depan agar urutan terjaga
+        // }
+
+        // // Gabungkan jadi string
+        // String queryNoBracket = String.join(" ", remaining);
+
+        // String[] queries = queryNoBracket.trim().split("\\s+");
+        // terms = new ArrayList<>();
+
+        // for (int i = 0; i < queries.length; i++) {
+        // if (!queries[i].equals("not")
+        // && !queries[i].equals("and")
+        // && !queries[i].equals("or")) {
+        // List<String> res = preprocessor.process(queries[i]);
+        // for (String term : res)
+        // terms.add(term);
+        // } else {
+        // terms.add(queries[i]);
+        // }
+        // }
+
+        // // process, simpen
+        // if (!resultStack.isEmpty()) {
+        // List<PostingNode> prevResult = resultStack.pop();
+        // resultStack.push(model.process(terms, prevResult));
+        // } else {
+        // resultStack.push(model.process(terms));
+        // }
+
+        // }
+
+        // return resultStack.isEmpty() ? new ArrayList<>() : resultStack.pop();
 
     }
 

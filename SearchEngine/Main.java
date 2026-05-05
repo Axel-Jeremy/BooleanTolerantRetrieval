@@ -36,6 +36,9 @@ public class Main {
 
         // 5. Set maxDocID ke BooleanModel
         BooleanModel model = new BooleanModel();
+        TolerantRetrieval tolerantModel = new TolerantRetrieval();
+
+        tolerantModel.setInvertedIndex(invertedIndex);
         model.setInvertedIndex(invertedIndex);
         model.setMaxDocID(invertedIndex.getMaxDocID());
 
@@ -51,7 +54,7 @@ public class Main {
                 continue;
 
             // 7. Proses query
-            Query query = new Query(input);
+            Test query = new Test(input);
             query.setInvertedIndex(invertedIndex);
             query.setModel(model);
 

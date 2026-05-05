@@ -3,6 +3,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class InvertedIndex {
     private Map<String, List<PostingNode>> postingList;
@@ -21,6 +22,10 @@ public class InvertedIndex {
 
     public int getMaxDocID() {
         return maxDocID;
+    }
+
+    public Set<String> getAllTerms() {
+        return postingList.keySet();
     }
 
     public boolean isDocIdExist(String term, int targetDocId) {
