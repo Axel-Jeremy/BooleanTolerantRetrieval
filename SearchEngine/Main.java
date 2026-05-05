@@ -55,7 +55,7 @@ public class Main {
                 continue;
 
             // 7. Proses query
-            Query query = new Query(input);
+            Test query = new Test(input);
             query.setInvertedIndex(invertedIndex);
             query.setModel(model);
             query.setTolerantModel(tolerant);

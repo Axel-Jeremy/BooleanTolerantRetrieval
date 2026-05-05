@@ -1,14 +1,12 @@
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Queue;
+import java.util.Map;
 import java.util.Stack;
 
 public class Query {
     private String query;
-    private Stack<String> orderProcess;
     private Stack<List<PostingNode>> resultStack;
     private TextPreprocessor preprocessor;
     private BooleanModel model;
@@ -17,7 +15,6 @@ public class Query {
 
     public Query(String query) {
         this.query = query.trim().toLowerCase();
-        this.orderProcess = new Stack<>();
         this.resultStack = new Stack<>();
         this.preprocessor = new TextPreprocessor();
         this.model = new BooleanModel();
@@ -36,130 +33,132 @@ public class Query {
         Query.invertedIndex = invertedIndex;
     }
 
-    public boolean isOperator(String kata) {
-        return kata.equals("not") || kata.equals("and") || kata.equals("or"); 
-    }
-
     // public List<PostingNode> processQuery(List<String> terms) {
     // return model.process(terms);
     // }
+    private static final Map<String, Integer> ORDER = new HashMap<>();
+    static {
+        ORDER.put("OR", 1);
+        ORDER.put("AND", 2);
+        ORDER.put("NOT", 3);
+    }
+
+    public boolean isOperator(String kata) {
+        return kata.equals("and") || kata.equals("or") || kata.equals("not");
+    }
 
     public List<PostingNode> preProcess() {
-        List<String> tokens = splitQuery();
+        List<String> splittedQuery = splitQuery();
+        List<String> terms = null;
 
-        // FASE 1: Shunting-Yard → ubah infix ke postfix
-        List<String> postfix = shuntingYard(tokens);
+        Stack<String> orderProcess = new Stack<>();
+        Stack<String> operator = new Stack<>();
 
-        // FASE 2: Evaluasi postfix
-        return evaluate(postfix);
-    }
-
-    private List<String> shuntingYard(List<String> tokens) {
-        Queue<String> outputQueue = new LinkedList<>();
-        Deque<String> operatorStack = new ArrayDeque<>();
-
-        for (String raw : tokens) {
-            String token = isOperator(raw) ? raw.toLowerCase() : raw;
-
-            if (isOperator(token)) {
-                // Pop operator lama yang prioritasnya >= token ini
-                while (!operatorStack.isEmpty()
-                        && isOperator(operatorStack.peek())
-                        && getPriority(operatorStack.peek()) >= getPriority(token)) {
-                    outputQueue.add(operatorStack.pop());
+        for (String kata : splittedQuery) {
+            if (kata.charAt(0) == '(') {
+                operator.push(kata);
+            } else if (kata.equals(")")) {
+                while (!operator.isEmpty() && !operator.peek().equals("(")) {
+                    orderProcess.push(operator.pop());
                 }
-                operatorStack.push(token);
-
-            } else if (token.equals("(")) {
-                operatorStack.push(token);
-
-            } else if (token.equals(")")) {
-                // Pop sampai ketemu "("
-                while (!operatorStack.isEmpty() && !operatorStack.peek().equals("(")) {
-                    outputQueue.add(operatorStack.pop());
+                operator.push(kata);
+            } else if (isOperator(kata)) {
+                while (!operator.isEmpty()
+                        && isOperator(operator.peek())
+                        && ORDER.get(operator.peek()) >= ORDER.get(kata)) {
+                    orderProcess.push(operator.pop());
                 }
-                if (!operatorStack.isEmpty()) {
-                    operatorStack.pop(); // buang "("
-                }
-
-            } else {
-                // Term biasa → stem dulu, lalu masuk output queue
-                List<String> stemmed = preprocessor.process(token);
-                for (String s : stemmed)
-                    outputQueue.add(tolerant.correct(s));
+                operator.push(kata);
             }
         }
 
-        // Pop sisa operator ke output
-        while (!operatorStack.isEmpty()) {
-            outputQueue.add(operatorStack.pop());
+         while (!operator.isEmpty()) {
+            orderProcess.add(operator.pop());
         }
 
-        return new ArrayList<>(outputQueue);
-    }
+        // return new ArrayList<>(orderProcess);
+        return null;
+        // List<String> splittedQuery = splitQuery();
+        // List<String> terms = null;
+        // for (String kata : splittedQuery) {
+        // if (kata.charAt(0) != ')') {
+        // orderProcess.push(kata);
+        // } else {
+        // String queryNoBracket = "";
+        // while (!orderProcess.peek().equals("(")) {
+        // queryNoBracket = orderProcess.pop() + " " + queryNoBracket;
+        // }
+        // orderProcess.pop();
 
-    private List<PostingNode> evaluate(List<String> postfix) {
-        Deque<List<PostingNode>> resultStack = new ArrayDeque<>();
+        // String[] queries = queryNoBracket.trim().split("\\s+");
+        // terms = new ArrayList<>();
 
-        for (String token : postfix) {
-            if (token.equals("not")) {
-                if (resultStack.isEmpty())
-                    return new ArrayList<>();
-                List<PostingNode> operand = resultStack.pop();
-                if (operand.isEmpty())
-                    return new ArrayList<>();
-                resultStack.push(assignPointer(model.negate(operand.getFirst())));
+        // for (int i = 0; i < queries.length; i++) {
+        // if (!queries[i].equals("not")
+        // && !queries[i].equals("and")
+        // && !queries[i].equals("or")) {
+        // List<String> res = preprocessor.process(queries[i]);
+        // for (String term : res)
+        // terms.add(term);
+        // } else {
+        // terms.add(queries[i]);
+        // }
+        // }
 
-            } else if (token.equals("and")) {
-                if (resultStack.size() < 2)
-                    return new ArrayList<>();
-                List<PostingNode> right = resultStack.pop();
-                List<PostingNode> left = resultStack.pop();
-                if (right.isEmpty() || left.isEmpty()) {
-                    resultStack.push(new ArrayList<>());
-                } else {
-                    resultStack.push(assignPointer(
-                            model.intersect(left.getFirst(), right.getFirst())));
-                }
+        // boolean startsWithOperator = !terms.isEmpty()
+        // && (terms.get(0).equals("and")
+        // || terms.get(0).equals("or")
+        // || terms.get(0).equals("not"));
 
-            } else if (token.equals("or")) {
-                if (resultStack.size() < 2)
-                    return new ArrayList<>();
-                List<PostingNode> right = resultStack.pop();
-                List<PostingNode> left = resultStack.pop();
-                if (right.isEmpty() && left.isEmpty()) {
-                    resultStack.push(new ArrayList<>());
-                } else if (right.isEmpty()) {
-                    resultStack.push(left);
-                } else if (left.isEmpty()) {
-                    resultStack.push(right);
-                } else {
-                    resultStack.push(assignPointer(
-                            model.union(left.getFirst(), right.getFirst())));
-                }
+        // if (startsWithOperator && !resultStack.isEmpty()) {
+        // List<PostingNode> prevResult = resultStack.pop();
+        // resultStack.push(model.process(terms, prevResult));
+        // } else {
+        // resultStack.push(model.process(terms));
+        // }
 
-            } else {
-                // Term biasa → ambil posting list dari index
-                List<PostingNode> posting = invertedIndex.getPostingList(token);
-                resultStack.push(posting != null ? posting : new ArrayList<>());
-            }
-        }
+        // // process sub bagian query, taro
+        // // resultStack.push(processQuery(terms));
+        // }
+        // }
 
-        return resultStack.isEmpty() ? new ArrayList<>() : resultStack.pop();
-    }
+        // // jika order process masih ada isi
+        // if (!this.orderProcess.isEmpty()) {
+        // // Kumpulkan semua sisa token dengan urutan yang benar
+        // List<String> remaining = new ArrayList<>();
+        // while (!orderProcess.isEmpty()) {
+        // remaining.add(0, orderProcess.pop()); // insert di depan agar urutan terjaga
+        // }
 
-    private int getPriority(String operator) {
-        switch (operator.toLowerCase()) {
-            case "or":
-                return 1;
-            case "and":
-                return 2;
-            case "not":
-                return 3;
-            default:
-                return 0;
-        }
-    }
+        // // Gabungkan jadi string
+        // String queryNoBracket = String.join(" ", remaining);
+
+        // String[] queries = queryNoBracket.trim().split("\\s+");
+        // terms = new ArrayList<>();
+
+        // for (int i = 0; i < queries.length; i++) {
+        // if (!queries[i].equals("not")
+        // && !queries[i].equals("and")
+        // && !queries[i].equals("or")) {
+        // List<String> res = preprocessor.process(queries[i]);
+        // for (String term : res)
+        // terms.add(term);
+        // } else {
+        // terms.add(queries[i]);
+        // }
+        // }
+
+        // // process, simpen
+        // if (!resultStack.isEmpty()) {
+        // List<PostingNode> prevResult = resultStack.pop();
+        // resultStack.push(model.process(terms, prevResult));
+        // } else {
+        // resultStack.push(model.process(terms));
+        // }
+
+        // }
+
+        // return resultStack.isEmpty() ? new ArrayList<>() : resultStack.pop();
 
     private List<PostingNode> assignPointer(List<PostingNode> nodes) {
         return model.assignPointer(nodes);
