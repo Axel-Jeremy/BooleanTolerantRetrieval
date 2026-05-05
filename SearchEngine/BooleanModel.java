@@ -17,12 +17,13 @@ public class BooleanModel {
     }
 
     /**
-     * Overload dengan prevResult: dipakai ketika bracket ada di KIRI.
-     * terms diawali dengan operator (and / or / not).
+     * Overload dengan prevResult: dipakai ketika ada hasil bracket sebelumnya.
      *
-     * Contoh: (empirical AND evaluation) OR NOT effects
-     *   → hasil bracket = prevResult
-     *   → terms = ["or", "not", "effects"]  ← diawali operator
+     * FIX BUG 1 & 2:
+     * - Jika query dimulai dengan operator (and/or/not), prevResult harus
+     *   langsung dijadikan nilai awal `result` sebelum token diproses.
+     * - Setelah blok `not` tanpa term berikutnya, `i` harus di-increment
+     *   agar loop tidak macet / salah merge.
      */
     public List<PostingNode> process(List<String> preProcessedQuery,
             List<PostingNode> prevResult) {
@@ -35,11 +36,14 @@ public class BooleanModel {
         List<PostingNode> result = null;
         String pendingOperator = null;
 
-        // Jika query diawali operator → prevResult adalah operan kiri
+        // ── FIX BUG 1 ──────────────────────────────────────────────────────────
+        // Jika query diawali dengan operator (and / or / not), prevResult
+        // adalah operan kiri — jadikan ia nilai awal result SEBELUM iterasi.
         String firstToken = preProcessedQuery.get(0);
         if (firstToken.equals("and") || firstToken.equals("or") || firstToken.equals("not")) {
-            result = new ArrayList<>(prevResult);
+            result = new ArrayList<>(prevResult);   // seed result dari bracket sebelumnya
         }
+        // ───────────────────────────────────────────────────────────────────────
 
         int i = 0;
         while (i < preProcessedQuery.size()) {
@@ -61,15 +65,20 @@ public class BooleanModel {
                     String term = preProcessedQuery.get(i);
                     PostingNode p = invertedIndex.getPostingList(term).getFirst();
                     current = assignPointer(negate(p));
+                    // i akan di-increment di akhir loop (fall-through ke blok merge)
                 } else {
-                    // NOT tanpa term → negate prevResult (hasil bracket kanan)
+                    // ── FIX BUG 2 ──────────────────────────────────────────────
+                    // NOT tanpa term berikutnya → negate prevResult (hasil bracket)
                     current = assignPointer(negate(assignPointer(prevResult).getFirst()));
+                    // i sudah melampaui batas; blok merge di bawah akan menangani,
+                    // lalu i++ di akhir membuat while-condition false → loop selesai.
+                    // ─────────────────────────────────────────────────────────────
                 }
             } else {
                 current = invertedIndex.getPostingList(token);
             }
 
-            // Merge current ke result
+            // ── Merge current ke result ─────────────────────────────────────────
             if (result == null || result.isEmpty()) {
                 result = current;
             } else if (current == null || current.isEmpty()) {
@@ -85,6 +94,7 @@ public class BooleanModel {
                 }
                 pendingOperator = null;
             }
+            // ───────────────────────────────────────────────────────────────────
 
             i++;
         }
@@ -194,7 +204,7 @@ public class BooleanModel {
         return res;
     }
 
-    // public agar bisa dipanggil dari Query.java
+    // AND
     public List<PostingNode> intersect(PostingNode p1, PostingNode p2) {
         List<PostingNode> answer = new ArrayList<>();
 
@@ -234,7 +244,7 @@ public class BooleanModel {
         return res;
     }
 
-    // public agar bisa dipanggil dari Query.java
+    // OR
     public List<PostingNode> union(PostingNode p1, PostingNode p2) {
         List<PostingNode> answer = new ArrayList<>();
 

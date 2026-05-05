@@ -36,11 +36,12 @@ public class Main {
 
         // 5. Set maxDocID ke BooleanModel
         BooleanModel model = new BooleanModel();
-        TolerantRetrieval tolerantModel = new TolerantRetrieval();
+        TolerantRetrieval tolerant = new TolerantRetrieval();
 
-        tolerantModel.setInvertedIndex(invertedIndex);
         model.setInvertedIndex(invertedIndex);
         model.setMaxDocID(invertedIndex.getMaxDocID());
+
+        tolerant.setInvertedIndex(invertedIndex);
 
         // 6. Loop query — user bisa input query berulang kali
         Scanner scanner = new Scanner(System.in);
@@ -57,6 +58,7 @@ public class Main {
             Test query = new Test(input);
             query.setInvertedIndex(invertedIndex);
             query.setModel(model);
+            query.setTolerantModel(tolerant);
 
             List<PostingNode> result = query.preProcess();
 

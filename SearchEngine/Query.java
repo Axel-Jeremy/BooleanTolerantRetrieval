@@ -1,3 +1,4 @@
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,6 +10,7 @@ public class Query {
     private Stack<List<PostingNode>> resultStack;
     private TextPreprocessor preprocessor;
     private BooleanModel model;
+    private TolerantRetrieval tolerant;
     private static InvertedIndex invertedIndex;
 
     public Query(String query) {
@@ -16,10 +18,15 @@ public class Query {
         this.resultStack = new Stack<>();
         this.preprocessor = new TextPreprocessor();
         this.model = new BooleanModel();
+        this.tolerant = new TolerantRetrieval();
     }
 
     public void setModel(BooleanModel model) {
         this.model = model;
+    }
+
+    public void setTolerantModel(TolerantRetrieval tolerant) {
+        this.tolerant = tolerant;
     }
 
     public void setInvertedIndex(InvertedIndex invertedIndex) {
@@ -153,6 +160,8 @@ public class Query {
 
         // return resultStack.isEmpty() ? new ArrayList<>() : resultStack.pop();
 
+    private List<PostingNode> assignPointer(List<PostingNode> nodes) {
+        return model.assignPointer(nodes);
     }
 
     public List<String> splitQuery() {
