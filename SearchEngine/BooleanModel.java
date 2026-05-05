@@ -6,7 +6,6 @@ public class BooleanModel {
     private static int maxDocID;
 
     public BooleanModel() {
-        // maxDocID = 0;
     }
 
     public void setMaxDocID(int maxDocID) {
@@ -14,17 +13,32 @@ public class BooleanModel {
     }
 
     public void setInvertedIndex(InvertedIndex invertedIndex) {
-        this.invertedIndex = invertedIndex;
+        BooleanModel.invertedIndex = invertedIndex;
     }
 
+    /**
+     * Overload dengan prevResult: dipakai ketika bracket ada di KIRI.
+     * terms diawali dengan operator (and / or / not).
+     *
+     * Contoh: (empirical AND evaluation) OR NOT effects
+     *   → hasil bracket = prevResult
+     *   → terms = ["or", "not", "effects"]  ← diawali operator
+     */
     public List<PostingNode> process(List<String> preProcessedQuery,
             List<PostingNode> prevResult) {
-        List<PostingNode> result = prevResult;
+
+        // Kasus khusus: ["not"] sendirian → negate prevResult
+        if (preProcessedQuery.size() == 1 && preProcessedQuery.get(0).equals("not")) {
+            return assignPointer(negate(prevResult.getFirst()));
+        }
+
+        List<PostingNode> result = null;
         String pendingOperator = null;
 
-        // Kasus khusus: [not] sendirian → negate prevResult
-        if (preProcessedQuery.size() == 1 && preProcessedQuery.get(0).equals("not")) {
-            return assignPointer(negate(result.getFirst()));
+        // Jika query diawali operator → prevResult adalah operan kiri
+        String firstToken = preProcessedQuery.get(0);
+        if (firstToken.equals("and") || firstToken.equals("or") || firstToken.equals("not")) {
+            result = new ArrayList<>(prevResult);
         }
 
         int i = 0;
@@ -40,49 +54,46 @@ public class BooleanModel {
             List<PostingNode> current;
 
             if (token.equals("not")) {
-                // Ambil term berikutnya lalu negate
-                i++;
-                String term = preProcessedQuery.get(i);
-                PostingNode p = invertedIndex.getPostingList(term).getFirst();
-                current = assignPointer(negate(p)); // ← NOT dieksekusi dengan benar
+                i++; // lewati "not"
+
+                if (i < preProcessedQuery.size()) {
+                    // NOT diikuti term biasa
+                    String term = preProcessedQuery.get(i);
+                    PostingNode p = invertedIndex.getPostingList(term).getFirst();
+                    current = assignPointer(negate(p));
+                } else {
+                    // NOT tanpa term → negate prevResult (hasil bracket kanan)
+                    current = assignPointer(negate(assignPointer(prevResult).getFirst()));
+                }
             } else {
                 current = invertedIndex.getPostingList(token);
             }
 
+            // Merge current ke result
             if (result == null || result.isEmpty()) {
                 result = current;
             } else if (current == null || current.isEmpty()) {
-                // current kosong → hasil operasi tergantung operator
-                if ("or".equals(pendingOperator)) {
-                    // OR dengan kosong → result tetap
-                } else {
-                    // AND dengan kosong → hasil kosong
+                if (!"or".equals(pendingOperator)) {
                     result = new ArrayList<>();
                 }
+                pendingOperator = null;
             } else {
                 if ("or".equals(pendingOperator)) {
                     result = assignPointer(union(result.getFirst(), current.getFirst()));
-                } else {
+                } else if ("and".equals(pendingOperator)) {
                     result = assignPointer(intersect(result.getFirst(), current.getFirst()));
                 }
                 pendingOperator = null;
-                i++;
             }
 
+            i++;
         }
 
         return result != null ? result : new ArrayList<>();
     }
 
     public List<PostingNode> process(List<String> preProcessedQuery) {
-        // o'neill and bryan
-        // o neill and bryan
         List<PostingNode> result = null;
-
-        // jika didalam query
-        // semua dihubungkan dengan AND (... and ... and ... and ...)
-        // atau semua dihubungkan dengan OR (... or ... or ... or ...)
-        // dan tidak ada NOT
 
         if (!preProcessedQuery.contains("not")
                 && !preProcessedQuery.contains("or")) {
@@ -93,35 +104,11 @@ public class BooleanModel {
         } else if (!preProcessedQuery.contains("not")
                 && !preProcessedQuery.contains("and")) {
             List<String> terms = preProcessedQuery.stream()
-                    .filter(s -> !s.equals("and"))
+                    .filter(s -> !s.equals("or"))
                     .collect(java.util.stream.Collectors.toList());
             return unions(terms);
         }
 
-        // while (!preProcessedQuery.isEmpty()) {
-        // String p1 = preProcessedQuery.removeFirst();
-        // String kueri = preProcessedQuery.removeFirst();
-        // String p2 = preProcessedQuery.removeFirst();
-        // // (... and not ... and ... and ...) -> intersects if not contains OR
-        // // (... and ... or ...) -> intersect if contains OR
-        // if (p1.equals("not")) {
-
-        // }
-        // }
-        // return toList(result);
-
-        // contoh kasus
-        /*
-         * Query: "axel and not alek or budi"
-         * 
-         * i=0: token="axel" → result = posting(axel)
-         * i=1: token="and" → pendingOperator="and"
-         * i=2: token="not" → i++, ambil "alek", current = negate(posting(alek))
-         * → result = intersect(result, current)
-         * i=4: token="or" → pendingOperator="or"
-         * i=5: token="budi" → current = posting(budi)
-         * → result = union(result, current)
-         */
         String pendingOperator = null;
         List<String> query = new ArrayList<>(preProcessedQuery);
 
@@ -141,10 +128,8 @@ public class BooleanModel {
                 i++;
                 String term = query.get(i);
                 PostingNode p = invertedIndex.getPostingList(term).getFirst();
-                // negate menghasilkan list baru → perlu assignPointer
                 current = assignPointer(negate(p));
             } else {
-                // Dari invertedIndex → skip pointer sudah ada, tidak perlu assignPointer
                 current = invertedIndex.getPostingList(token);
             }
 
@@ -154,12 +139,11 @@ public class BooleanModel {
                 if (!"or".equals(pendingOperator)) {
                     result = new ArrayList<>();
                 }
+                pendingOperator = null;
             } else {
                 if ("or".equals(pendingOperator)) {
-                    // union menghasilkan list baru → perlu assignPointer
                     result = assignPointer(union(result.getFirst(), current.getFirst()));
                 } else {
-                    // intersect menghasilkan list baru → perlu assignPointer
                     result = assignPointer(intersect(result.getFirst(), current.getFirst()));
                 }
                 pendingOperator = null;
@@ -171,15 +155,7 @@ public class BooleanModel {
         return result != null ? result : new ArrayList<>();
     }
 
-    private List<Integer> toList(List<PostingNode> node) {
-        List<Integer> list = new ArrayList<>();
-        while (!node.isEmpty()) {
-            list.add(node.removeFirst().getDocID());
-        }
-        return list;
-    }
-
-    private List<PostingNode> assignPointer(List<PostingNode> nodes) {
+    public List<PostingNode> assignPointer(List<PostingNode> nodes) {
         if (nodes == null || nodes.isEmpty())
             return nodes;
 
@@ -206,47 +182,38 @@ public class BooleanModel {
     public List<PostingNode> intersects(List<String> terms) {
         terms.sort((a, b) -> invertedIndex.getPostingList(a).size() - invertedIndex.getPostingList(b).size());
 
-        // System.out.println("Intersects terms: " + terms);
         List<PostingNode> res = invertedIndex.getPostingList(terms.removeFirst());
-
-        // System.out.println("Posting list pertama size: " + res.size());
+        if (res.isEmpty()) return new ArrayList<>();
 
         while (!terms.isEmpty()) {
-            res = intersect(res.getFirst(), invertedIndex.getPostingList(terms.removeFirst()).getFirst());
-            // System.out.println("Hasil intersect size: " + res.size());
+            if (res.isEmpty()) return new ArrayList<>();
+            List<PostingNode> next = invertedIndex.getPostingList(terms.removeFirst());
+            if (next.isEmpty()) return new ArrayList<>();
+            res = intersect(res.getFirst(), next.getFirst());
         }
         return res;
     }
 
-    // AND
-    private List<PostingNode> intersect(PostingNode p1, PostingNode p2) {
+    // public agar bisa dipanggil dari Query.java
+    public List<PostingNode> intersect(PostingNode p1, PostingNode p2) {
         List<PostingNode> answer = new ArrayList<>();
 
         while (p1 != null && p2 != null) {
             int doc1 = p1.getDocID();
             int doc2 = p2.getDocID();
 
-            // System.out.println("Membandingkan doc1=" + doc1 + " dengan doc2=" + doc2);
-            // axel : 1 -> 5 -> 7
-            // alek : 1 -> 7
-
-            // axel and alek
-            // res = 1 -> 7
-
             if (doc1 == doc2) {
                 answer.add(new PostingNode(p1.getDocID()));
                 p1 = p1.getNext();
                 p2 = p2.getNext();
             } else if (doc1 < doc2) {
-                if (p1.getSkip() != null
-                        && p1.getSkip().getDocID() <= p2.getDocID()) {
+                if (p1.getSkip() != null && p1.getSkip().getDocID() <= p2.getDocID()) {
                     p1 = p1.getSkip();
                 } else {
                     p1 = p1.getNext();
                 }
             } else {
-                if (p2.getSkip() != null
-                        && p2.getSkip().getDocID() <= p1.getDocID()) {
+                if (p2.getSkip() != null && p2.getSkip().getDocID() <= p1.getDocID()) {
                     p2 = p2.getSkip();
                 } else {
                     p2 = p2.getNext();
@@ -259,13 +226,16 @@ public class BooleanModel {
     public List<PostingNode> unions(List<String> terms) {
         List<PostingNode> res = invertedIndex.getPostingList(terms.removeFirst());
         while (!terms.isEmpty()) {
-            res = union(res.getFirst(), invertedIndex.getPostingList(terms.removeFirst()).getFirst());
+            if (res.isEmpty()) return new ArrayList<>();
+            List<PostingNode> next = invertedIndex.getPostingList(terms.removeFirst());
+            if (next.isEmpty()) return new ArrayList<>();
+            res = union(res.getFirst(), next.getFirst());
         }
         return res;
     }
 
-    // OR
-    private List<PostingNode> union(PostingNode p1, PostingNode p2) {
+    // public agar bisa dipanggil dari Query.java
+    public List<PostingNode> union(PostingNode p1, PostingNode p2) {
         List<PostingNode> answer = new ArrayList<>();
 
         while (p1 != null && p2 != null) {
@@ -303,7 +273,7 @@ public class BooleanModel {
         for (int i = 1; i <= maxDocID; i++) {
             if (i != j)
                 result.add(new PostingNode(i));
-            if (i >= j) {
+            if (i == j) {
                 p1 = p1.getNext();
                 if (p1 != null) {
                     j = p1.getDocID();
