@@ -5,7 +5,7 @@ public class Main {
 
         // 1. Baca semua dokumen
         DocumentReader reader = new DocumentReader("../DataSet");
-        Map<Integer, String> documents = reader.readAll();
+        Map<Integer, String> documents = reader.readAll(100);
 
         if (documents.isEmpty()) {
             System.out.println("Tidak ada dokumen yang terbaca. Cek path folder.");
