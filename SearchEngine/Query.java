@@ -1,4 +1,3 @@
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +48,7 @@ public class Query {
 
     public List<PostingNode> preProcess() {
         List<String> splittedQuery = splitQuery();
-        List<String> terms = null;
+        // List<String> terms = null;
 
         Stack<String> orderProcess = new Stack<>();
         Stack<String> operator = new Stack<>();
@@ -78,87 +77,7 @@ public class Query {
 
         // return new ArrayList<>(orderProcess);
         return null;
-        // List<String> splittedQuery = splitQuery();
-        // List<String> terms = null;
-        // for (String kata : splittedQuery) {
-        // if (kata.charAt(0) != ')') {
-        // orderProcess.push(kata);
-        // } else {
-        // String queryNoBracket = "";
-        // while (!orderProcess.peek().equals("(")) {
-        // queryNoBracket = orderProcess.pop() + " " + queryNoBracket;
-        // }
-        // orderProcess.pop();
-
-        // String[] queries = queryNoBracket.trim().split("\\s+");
-        // terms = new ArrayList<>();
-
-        // for (int i = 0; i < queries.length; i++) {
-        // if (!queries[i].equals("not")
-        // && !queries[i].equals("and")
-        // && !queries[i].equals("or")) {
-        // List<String> res = preprocessor.process(queries[i]);
-        // for (String term : res)
-        // terms.add(term);
-        // } else {
-        // terms.add(queries[i]);
-        // }
-        // }
-
-        // boolean startsWithOperator = !terms.isEmpty()
-        // && (terms.get(0).equals("and")
-        // || terms.get(0).equals("or")
-        // || terms.get(0).equals("not"));
-
-        // if (startsWithOperator && !resultStack.isEmpty()) {
-        // List<PostingNode> prevResult = resultStack.pop();
-        // resultStack.push(model.process(terms, prevResult));
-        // } else {
-        // resultStack.push(model.process(terms));
-        // }
-
-        // // process sub bagian query, taro
-        // // resultStack.push(processQuery(terms));
-        // }
-        // }
-
-        // // jika order process masih ada isi
-        // if (!this.orderProcess.isEmpty()) {
-        // // Kumpulkan semua sisa token dengan urutan yang benar
-        // List<String> remaining = new ArrayList<>();
-        // while (!orderProcess.isEmpty()) {
-        // remaining.add(0, orderProcess.pop()); // insert di depan agar urutan terjaga
-        // }
-
-        // // Gabungkan jadi string
-        // String queryNoBracket = String.join(" ", remaining);
-
-        // String[] queries = queryNoBracket.trim().split("\\s+");
-        // terms = new ArrayList<>();
-
-        // for (int i = 0; i < queries.length; i++) {
-        // if (!queries[i].equals("not")
-        // && !queries[i].equals("and")
-        // && !queries[i].equals("or")) {
-        // List<String> res = preprocessor.process(queries[i]);
-        // for (String term : res)
-        // terms.add(term);
-        // } else {
-        // terms.add(queries[i]);
-        // }
-        // }
-
-        // // process, simpen
-        // if (!resultStack.isEmpty()) {
-        // List<PostingNode> prevResult = resultStack.pop();
-        // resultStack.push(model.process(terms, prevResult));
-        // } else {
-        // resultStack.push(model.process(terms));
-        // }
-
-        // }
-
-        // return resultStack.isEmpty() ? new ArrayList<>() : resultStack.pop();
+    }
 
     private List<PostingNode> assignPointer(List<PostingNode> nodes) {
         return model.assignPointer(nodes);
@@ -199,5 +118,4 @@ public class Query {
     // if index i == 'AND', query.processAND(kata1,kata2)
     // (unpar and (fakultas and informatika) or prabowo) and axel
     // (, unpar, and, (, fakultas, and, informatika, ), or, prabowo, ), and, axel
-
 }

@@ -5,7 +5,7 @@ public class Main {
 
         // 1. Baca semua dokumen
         DocumentReader reader = new DocumentReader("../DataSet");
-        Map<Integer, String> documents = reader.readAll();
+        Map<Integer, String> documents = reader.readAll(100);
 
         if (documents.isEmpty()) {
             System.out.println("Tidak ada dokumen yang terbaca. Cek path folder.");
@@ -55,7 +55,7 @@ public class Main {
                 continue;
 
             // 7. Proses query
-            Test query = new Test(input);
+            Query query = new Query(input);
             query.setInvertedIndex(invertedIndex);
             query.setModel(model);
             query.setTolerantModel(tolerant);
