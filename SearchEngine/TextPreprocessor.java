@@ -16,6 +16,19 @@ public class TextPreprocessor {
         return result;
     }
 
+    public List<String> getRawTerms(String text) {
+        List<String> res = new ArrayList<>();
+        String[] raw = text.toLowerCase().toLowerCase()
+        .replaceAll("[^a-z ]", " ")
+        .split("\\s+");
+
+        for (String rawText : raw) {
+            res.add(rawText);
+        }
+
+        return res;
+    }
+
     private List<String> stem(List<String> terms) {
         List<String> res = new ArrayList<>();
         for (String term : terms) {

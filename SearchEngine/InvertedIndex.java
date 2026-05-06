@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +9,7 @@ import java.util.Set;
 public class InvertedIndex {
     private Map<String, List<PostingNode>> postingList;
     private HashMap<String, Integer> postingLengths;
+    private Set<String> rawVocabulary = new HashSet<>();
     private int maxDocID;
 
     public InvertedIndex() {
@@ -39,6 +41,14 @@ public class InvertedIndex {
                 return true;
         }
         return false;
+    }
+
+    public void addRawTerm(String rawTerm) {
+        rawVocabulary.add(rawTerm.toLowerCase());
+    }
+
+    public Set<String> getRawVocabulary() {
+        return rawVocabulary;
     }
 
     public void addDocument(String term, int docID) {

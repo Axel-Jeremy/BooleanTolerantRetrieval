@@ -23,6 +23,12 @@ public class Main {
             if (!documents.containsKey(docID))
                 continue;
 
+            String content = documents.get(docID);
+            List<String> rawTerms = preprocessor.getRawTerms(content);
+
+            for (String raw : rawTerms) {
+                invertedIndex.addRawTerm(raw);
+            }
             List<String> terms = preprocessor.process(documents.get(docID));
             for (String term : terms) {
                 invertedIndex.addDocument(term, docID);
@@ -55,7 +61,7 @@ public class Main {
                 continue;
 
             // 7. Proses query
-            Test query = new Test(input);
+            Query query = new Query(input);
             query.setInvertedIndex(invertedIndex);
             query.setModel(model);
             query.setTolerantModel(tolerant);
