@@ -23,6 +23,12 @@ public class Main {
             if (!documents.containsKey(docID))
                 continue;
 
+            String content = documents.get(docID);
+            List<String> rawTerms = preprocessor.getRawTerms(content);
+
+            for (String raw : rawTerms) {
+                invertedIndex.addRawTerm(raw);
+            }
             List<String> terms = preprocessor.process(documents.get(docID));
             for (String term : terms) {
                 invertedIndex.addDocument(term, docID);

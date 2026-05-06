@@ -1,50 +1,46 @@
+import java.util.List;
 import java.util.Set;
 
 public class TolerantRetrieval {
     private InvertedIndex invertedIndex;
     private int threshold;
+    private TextPreprocessor preprocessor;
 
     public TolerantRetrieval() {
         this.threshold = 2;
+        this.preprocessor = new TextPreprocessor();
     }
 
     public void setInvertedIndex(InvertedIndex invertedIndex) {
         this.invertedIndex = invertedIndex;
     }
 
-    public String correct(String term) {
-        Set<String> vocabulary = invertedIndex.getAllTerms();
+    public String correct(String rawTerm) {
+        Set<String> rawVocab = invertedIndex.getRawVocabulary();
 
-        // kalau term sudah ada, return langsung
-        if (vocabulary.contains(term)) {
-            return term;
+        // Kalau sudah ada di raw vocab → tidak perlu koreksi
+        if (rawVocab.contains(rawTerm)) {
+            return rawTerm;
         }
 
-        String bestCandidate = term;
+        String bestCandidate = rawTerm;
         int minDistance = Integer.MAX_VALUE;
 
-        for (String candidate : vocabulary) {
-
-            // pruning sederhana: beda panjang terlalu jauh skip
-            if (Math.abs(candidate.length() - term.length()) > threshold) {
+        for (String candidate : rawVocab) {
+            if (Math.abs(candidate.length() - rawTerm.length()) > threshold) {
                 continue;
             }
 
-            int distance = editDistance(term, candidate);
-
+            int distance = editDistance(rawTerm, candidate);
             if (distance < minDistance) {
                 minDistance = distance;
                 bestCandidate = candidate;
             }
-
-            // exact impossible but just in case
-            if (minDistance == 0) {
+            if (minDistance == 0)
                 break;
-            }
         }
 
-        // hanya koreksi jika distance cukup kecil
-        return minDistance <= threshold ? bestCandidate : term; 
+        return minDistance <= threshold ? bestCandidate : rawTerm;
     }
 
     private int editDistance(String s1, String s2) {
