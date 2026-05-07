@@ -9,6 +9,10 @@ import java.util.Map;
  * Kelas DocumentReader berfungsi untuk membaca kumpulan dokumen teks dari 
  * sebuah direktori atau folder tertentu. Dokumen yang dibaca kemudian 
  * disimpan ke dalam struktur data Map untuk diproses lebih lanjut.
+ * 
+ * Sumber: Membuat sendiri dengan bantuan LLM
+ * 
+ * @author Axel, Keane
  */
 public class DocumentReader {
     /**
@@ -46,7 +50,7 @@ public class DocumentReader {
             }
         }
 
-        System.out.println("Berhasil membaca " + documents.size() + " dokumen.");
+        System.out.println("Successfully read " + documents.size() + " document(s).");
         return documents;
     }
 
@@ -68,10 +72,10 @@ public class DocumentReader {
                 content.append(line).append(" ");
             }
         } catch (FileNotFoundException e) {
-            System.out.println("File tidak ditemukan: " + filePath);
+            System.err.println("File not found: " + filePath);
             return null;
         } catch (IOException e) {
-            System.out.println("Gagal membaca file: " + filePath + " --> " + e.getMessage());
+            System.err.println("Read file failed: " + filePath + " --> " + e.getMessage());
             return null;
         }
 

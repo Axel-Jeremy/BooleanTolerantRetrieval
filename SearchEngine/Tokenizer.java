@@ -5,6 +5,10 @@ import java.util.List;
  * Kelas Tokenizer berfungsi untuk memproses teks mentah (raw text) menjadi term.
  * Proses ini meliputi pembersihan karakter non-alfabet (seperti tanda baca dan angka), 
  * pemisahan kata, serta penyeragaman teks menjadi huruf kecil (case folding).
+ * 
+ * Sumber: Membuat sendiri dengan bantuan LLM
+ * 
+ * @author Axel, Keane
  */
 public class Tokenizer {
 

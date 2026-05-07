@@ -3,8 +3,12 @@ import java.util.List;
 
 /**
  * Kelas Stemmer mengimplementasikan algoritma Porter Stemmer.
- * Algoritma ini digunakan untuk mereduksi kata (khususnya dalam bahasa Inggris) 
+ * Algoritma ini digunakan untuk mereduksi kata, khususnya dalam bahasa Inggris 
  * ke bentuk dasarnya dengan cara menghilangkan sufiks atau akhiran.
+ * 
+ * Sumber: Membuat sendiri
+ * 
+ * @author Axel, Alex, Keane
  */
 public class Stemmer {
     /**
