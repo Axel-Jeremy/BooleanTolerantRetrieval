@@ -1,25 +1,58 @@
-import java.util.List;
 import java.util.Set;
 
+/**
+ * Kelas TolerantRetrieval menangani fitur toleransi kesalahan ketik (spell correction) 
+ * pada kueri pencarian. Kelas ini menggunakan algoritma Levenshtein Distance (Edit Distance) 
+ * untuk mencari kata kandidat yang paling mirip dari himpunan kosa kata (vocabulary) 
+ * yang ada di dalam indeks.
+ * 
+* Sumber: Membuat sendiri dengan bantuan LLM
+ * 
+ * @author Keane
+ */
 public class TolerantRetrieval {
-    private InvertedIndex invertedIndex;
-    private int threshold;
-    private TextPreprocessor preprocessor;
 
+    /**
+     * Referensi ke struktur data InvertedIndex yang digunakan untuk mengambil 
+     * kosa kata asli (raw vocabulary).
+     */
+    private static InvertedIndex invertedIndex;
+
+    /**
+     * Batas maksimal nilai edit distance (jarak pengubahan) yang dapat ditoleransi.
+     * Kata hanya akan dikoreksi jika jaraknya dengan kata di vocabulary <= 2.
+     */
+    private static int threshold = 2;
+
+    /**
+     * Default constructor
+     */
     public TolerantRetrieval() {
-        this.threshold = 2;
-        this.preprocessor = new TextPreprocessor();
     }
 
+    /**
+     * Menetapkan objek InvertedIndex yang akan digunakan sebagai basis acuan 
+     * kosa kata dalam proses pencarian kandidat perbaikan kata.
+     * 
+     * @param invertedIndex Objek InvertedIndex yang berisi data teks terindeks.
+     */
     public void setInvertedIndex(InvertedIndex invertedIndex) {
-        this.invertedIndex = invertedIndex;
+        TolerantRetrieval.invertedIndex = invertedIndex;
     }
 
+    /**
+     * Mengoreksi kata yang diduga typo (salah ketik) dengan mencari kandidat kata 
+     * terdekat dari raw vocabulary yang ada di InvertedIndex.
+     * 
+     * @param rawTerm Kata mentah dari kueri pengguna yang akan dicek.
+     * @return Kata yang sudah dikoreksi jika ditemukan kandidat dengan jarak <= threshold. 
+     *         Mengembalikan kata aslinya jika kata tersebut sudah benar atau tidak ada 
+     *         kandidat kata yang memenuhi syarat batas (threshold).
+     */
     public String correct(String rawTerm) {
         Set<String> rawVocab = invertedIndex.getRawVocabulary();
 
-        // Kalau sudah ada di raw vocab → tidak perlu koreksi
-        if (rawVocab.contains(rawTerm)) {
+        if (rawVocab.contains(rawTerm)) { // kalo ada di raw vocab berarti term gausah dikoreksi
             return rawTerm;
         }
 
@@ -40,9 +73,22 @@ public class TolerantRetrieval {
                 break;
         }
 
+        // Kembalikan kata kandidat terbaik jika jaraknya masih masuk akal (<= threshold),
+        // jika tidak, kembalikan kata inputannya (rawTerm) karena kemungkinan bukan typo biasa.
         return minDistance <= threshold ? bestCandidate : rawTerm;
     }
 
+    /**
+     * Menghitung nilai Levenshtein Distance (Edit Distance) antara dua buah string 
+     * menggunakan pendekatan Dynamic Programming.
+     * Edit distance adalah jumlah minimum operasi penyisipan (insert), penghapusan (delete), 
+     * atau penggantian (replace) karakter yang diperlukan untuk mengubah string s1 menjadi s2.
+     * 
+     * @param s1 String pertama (biasanya kata kueri).
+     * @param s2 String kedua (biasanya kata kandidat dari vocabulary).
+     * @return Nilai integer yang merepresentasikan jumlah langkah/operasi minimal 
+     *         untuk menyamakan kedua string.
+     */
     private int editDistance(String s1, String s2) {
         int m = s1.length();
         int n = s2.length();
@@ -72,7 +118,7 @@ public class TolerantRetrieval {
                 }
             }
         }
-
+        // Hasil akhir berada di pojok kanan bawah matriks
         return dp[m][n];
     }
 }

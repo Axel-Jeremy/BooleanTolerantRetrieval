@@ -4,6 +4,11 @@
  * informasi (Information Retrieval) untuk menyimpan daftar dokumen yang mengandung 
  * suatu kata (term) tertentu. Kelas ini juga mendukung implementasi skip pointer
  * untuk mempercepat proses pencarian atau irisan (intersection).
+ * 
+ * Sumber: Membuat sendiri
+ * 
+ * @author Axel 
+ * 
  */
 public class PostingNode {
     /**
