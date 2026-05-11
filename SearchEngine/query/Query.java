@@ -1,3 +1,5 @@
+package query;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -7,6 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
+import index.*;
+import model.*;
+import preprocess.TextPreprocessor;
 /**
  * Kelas Query bertanggung jawab untuk memproses kueri pencarian boolean dari pengguna.
  * Kelas ini menangani proses tokenisasi kueri, pengubahan struktur kueri dari infix

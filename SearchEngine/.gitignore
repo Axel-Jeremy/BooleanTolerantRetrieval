@@ -1,0 +1,28 @@
+# Kompilasi Java
+*.class
+
+# Log files
+*.log
+
+# Folder output hasil build
+bin/
+out/
+target/
+
+# Konfigurasi IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+
+# Konfigurasi Visual Studio Code
+.vscode/
+
+# Konfigurasi Eclipse
+.metadata/
+.classpath
+.project
+.settings/
+
+# File sistem operasi
+.DS_Store
+Thumbs.db

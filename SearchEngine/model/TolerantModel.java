@@ -1,5 +1,8 @@
+package model;
+
 import java.util.Set;
 
+import index.*;
 /**
  * Kelas TolerantModel menangani fitur toleransi kesalahan ketik (spell correction) 
  * pada kueri pencarian. Kelas ini menggunakan algoritma Levenshtein Distance (Edit Distance) 

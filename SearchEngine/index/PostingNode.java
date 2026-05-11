@@ -1,3 +1,5 @@
+package index;
+
 /**
  * Kelas PostingNode merepresentasikan sebuah node (simpul) di dalam sebuah posting list.
  * Struktur data ini digunakan pada Inverted Index dalam sistem temu kembali 
