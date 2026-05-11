@@ -1,3 +1,5 @@
+package reader;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -41,7 +43,7 @@ public class DocumentReader {
         Map<Integer, String> documents = new HashMap<>();
 
         for (int i = 1; i <= n; i++) {
-            String filePath = folderPath + "/" + i + ".txt";
+            String filePath = "" + folderPath + "/" + i + ".txt";
             String content = readFile(filePath);
 
             // Jika file berhasil dibaca dan isinya tidak null, masukkan ke dalam Map

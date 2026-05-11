@@ -1,6 +1,9 @@
+package model;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import index.*;
 /**
  * Kelas BooleanModel bertanggung jawab untuk menangani eksekusi operasi logika 
  * Boolean (AND, OR, NOT) pada himpunan posting list. 

@@ -1,5 +1,11 @@
 import java.util.*;
 
+import index.*;
+import model.*;
+import preprocess.TextPreprocessor;
+import query.Query;
+import reader.DocumentReader;
+
 /**
  * Kelas Main digunakan untuk menjalankan
  * aplikasi mesin pencari (Information Retrieval). Kelas ini mengatur alur
