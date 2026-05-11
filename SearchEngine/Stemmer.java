@@ -6,7 +6,7 @@ import java.util.List;
  * Algoritma ini digunakan untuk mereduksi kata, khususnya dalam bahasa Inggris 
  * ke bentuk dasarnya dengan cara menghilangkan sufiks atau akhiran.
  * 
- * Sumber: Membuat sendiri
+ * Sumber: Membuat sendiri, materi slide Information Retrieval
  * 
  * @author Axel, Alex, Keane
  */
@@ -248,16 +248,15 @@ public class Stemmer {
      * @return charList hasil dari step 1B tabel kanan.
      */
     public List<String> step1Bb(List<String> charList) {
-        String last2Char = kata.substring(kata.length() - 2, kata.length());
-
-        if (last2Char.equals("at")
-                || last2Char.equals("bl")
-                || last2Char.equals("iz")) {
+        if (kata.endsWith("at")
+                || kata.endsWith("bl")
+                || kata.endsWith("iz")) {
             charList.add("e");
-        } else if (isDoubleLetter(last2Char)
-                && !(last2Char.charAt(1) == 'l'
-                        || last2Char.charAt(1) == 's'
-                        || last2Char.charAt(1) == 'z')) {
+        } else if (kata.length() >= 2 
+        && isDoubleLetter(kata.substring(kata.length() - 2, kata.length()))
+                && !(kata.endsWith("l")
+                        || kata.endsWith("s")
+                        || kata.endsWith("z"))) {
             charList.removeLast();
         } else if (calculateMeasure(kata) == 1
                 && oRule(kata)) {

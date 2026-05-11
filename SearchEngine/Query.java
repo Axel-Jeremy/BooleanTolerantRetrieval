@@ -129,6 +129,46 @@ public class Query {
     }
 
     /**
+     * Memisahkan teks kueri mentah menjadi sekumpulan token terpisah.
+     * Metode ini memperhatikan spasi dan memisahkan secara eksplisit tanda 
+     * kurung "(" dan ")".
+     * 
+     * @return List berisi token-token kueri yang sudah terpisah (termasuk kurung 
+     *         dan operator).
+     */
+    public List<String> splitQuery() {
+        List<String> token = new ArrayList<>();
+        String temp = "";
+
+        for (char c : query.toCharArray()) {
+            if (c == '(' || c == ')') {
+                if (temp.length() > 0) {
+                    token.add(temp);
+                    temp = "";
+                }
+
+                token.add(c + "");
+            }
+
+            else if (c == ' ') {
+                if (temp.length() > 0) {
+                    token.add(temp);
+                    temp = "";
+                }
+            }
+
+            else {
+                temp = temp + c;
+            }
+        }
+        if (temp.length() > 0) {
+            token.add(temp);
+        }
+
+        return token;
+    }
+
+    /**
      * Mengonversi kueri dari notasi infix (contoh: A AND B) menjadi notasi postfix
      * (contoh: A B AND) menggunakan algoritma Shunting Yard.
      * Pada tahap ini, token yang bukan operator juga akan diproses untuk koreksi
@@ -243,45 +283,5 @@ public class Query {
      */
     private List<PostingNode> assignPointer(List<PostingNode> nodes) {
         return model.assignPointer(nodes);
-    }
-
-    /**
-     * Memisahkan teks kueri mentah menjadi sekumpulan token terpisah.
-     * Metode ini memperhatikan spasi dan memisahkan secara eksplisit tanda 
-     * kurung "(" dan ")".
-     * 
-     * @return List berisi token-token kueri yang sudah terpisah (termasuk kurung 
-     *         dan operator).
-     */
-    public List<String> splitQuery() {
-        List<String> token = new ArrayList<>();
-        String temp = "";
-
-        for (char c : query.toCharArray()) {
-            if (c == '(' || c == ')') {
-                if (temp.length() > 0) {
-                    token.add(temp);
-                    temp = "";
-                }
-
-                token.add(c + "");
-            }
-
-            else if (c == ' ') {
-                if (temp.length() > 0) {
-                    token.add(temp);
-                    temp = "";
-                }
-            }
-
-            else {
-                temp = temp + c;
-            }
-        }
-        if (temp.length() > 0) {
-            token.add(temp);
-        }
-
-        return token;
     }
 }
