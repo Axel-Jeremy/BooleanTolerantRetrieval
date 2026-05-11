@@ -116,7 +116,7 @@ public class Main {
         model.setMaxDocID(invertedIndex.getMaxDocID());
 
         // Menginisialisasi Tolerant Retrieval untuk fitur koreksi ejaan (typo)
-        TolerantRetrieval tolerant = new TolerantRetrieval();
+        TolerantModel tolerant = new TolerantModel();
         tolerant.setInvertedIndex(invertedIndex);
 
         System.out.println("---------------------------------------------");

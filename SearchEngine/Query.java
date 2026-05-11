@@ -41,7 +41,7 @@ public class Query {
     /**
      * Modul untuk menangani toleransi kesalahan ketik (spell correction).
      */
-    private static TolerantRetrieval tolerant;
+    private static TolerantModel tolerant;
 
     /**
      * Referensi statik Inverted Index tempat pencarian dilakukan.
@@ -88,7 +88,7 @@ public class Query {
      * 
      * @param tolerant Objek TolerantRetrieval.
      */
-    public void setTolerantModel(TolerantRetrieval tolerant) {
+    public void setTolerantModel(TolerantModel tolerant) {
         Query.tolerant = tolerant;
     }
 

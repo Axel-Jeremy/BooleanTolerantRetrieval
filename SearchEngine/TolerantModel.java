@@ -1,7 +1,7 @@
 import java.util.Set;
 
 /**
- * Kelas TolerantRetrieval menangani fitur toleransi kesalahan ketik (spell correction) 
+ * Kelas TolerantModel menangani fitur toleransi kesalahan ketik (spell correction) 
  * pada kueri pencarian. Kelas ini menggunakan algoritma Levenshtein Distance (Edit Distance) 
  * untuk mencari kata kandidat yang paling mirip dari himpunan kosa kata (vocabulary) 
  * yang ada di dalam indeks.
@@ -10,7 +10,7 @@ import java.util.Set;
  * 
  * @author Keane
  */
-public class TolerantRetrieval {
+public class TolerantModel{
 
     /**
      * Referensi ke struktur data InvertedIndex yang digunakan untuk mengambil 
@@ -27,7 +27,7 @@ public class TolerantRetrieval {
     /**
      * Default constructor
      */
-    public TolerantRetrieval() {
+    public TolerantModel() {
     }
 
     /**
@@ -37,7 +37,7 @@ public class TolerantRetrieval {
      * @param invertedIndex Objek InvertedIndex yang berisi data teks terindeks.
      */
     public void setInvertedIndex(InvertedIndex invertedIndex) {
-        TolerantRetrieval.invertedIndex = invertedIndex;
+        TolerantModel.invertedIndex = invertedIndex;
     }
 
     /**
