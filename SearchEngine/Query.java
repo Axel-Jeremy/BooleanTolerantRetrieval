@@ -8,16 +8,15 @@ import java.util.Map;
 import java.util.Queue;
 
 /**
- * Kelas Query bertanggung jawab untuk memproses kueri pencarian boolean dari
- * pengguna.
- * Kelas ini menangani proses tokenisasi kueri, pengubahan struktur kueri dari
- * infix
- * menjadi postfix menggunakan algoritma Shunting Yard, serta evaluasi kueri
- * tersebut
+ * Kelas Query bertanggung jawab untuk memproses kueri pencarian boolean dari pengguna.
+ * Kelas ini menangani proses tokenisasi kueri, pengubahan struktur kueri dari infix
+ * menjadi postfix menggunakan algoritma Shunting Yard, serta evaluasi kueri tersebut
  * terhadap Inverted Index untuk mendapatkan daftar dokumen yang relevan.
  * 
  * Sumber: Membuat sendiri dengan bantuan LLM,
  * https://www.geeksforgeeks.org/java/java-program-to-implement-shunting-yard-algorithm/
+ * https://www.youtube.com/watch?v=Wz85Hiwi5MY
+ * https://www.youtube.com/watch?v=bebqXO8H4eA
  * 
  * @author Axel, Alex, Keane
  * 
@@ -63,8 +62,7 @@ public class Query {
     /**
      * Konstruktor untuk membuat objek Query baru.
      * Menginisialisasi kueri dengan menghapus spasi ekstra dan mengubahnya ke huruf
-     * kecil,
-     * serta menyiapkan modul-modul pendukung.
+     * kecil, serta menyiapkan modul-modul pendukung.
      * 
      * @param query String kueri boolean yang dimasukkan pengguna.
      */

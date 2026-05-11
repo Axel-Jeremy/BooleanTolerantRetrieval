@@ -8,7 +8,7 @@ import java.util.Set;
 
 /**
  * Kelas InvertedIndex merepresentasikan struktur data yang
- *  digunakan dalam sistem Information Retrieval untuk memetakan sebuah kata 
+ * digunakan dalam sistem Information Retrieval untuk memetakan sebuah kata 
  * (term) ke daftar dokumen (posting list) yang mengandung kata tersebut.
  * Kelas ini juga mendukung penambahan skip pointer untuk mempercepat proses pencarian.
  * 
