@@ -5,9 +5,9 @@ import java.util.List;
  * Kelas BooleanModel bertanggung jawab untuk menangani eksekusi operasi logika 
  * Boolean (AND, OR, NOT) pada himpunan posting list. 
  * Kelas ini mengimplementasikan algoritma penggabungan dan irisan yang efisien, 
- * termasuk pemanfaatan *skip pointer* untuk mempercepat pencarian.
+ * termasuk pemanfaatan skip pointer untuk mempercepat pencarian.
  * 
-* Sumber: Membuat sendiri dengan bantuan LLM
+ * Sumber: Membuat sendiri dengan bantuan LLM
  * 
  * @author Axel, Alex, Keane
  */
@@ -38,51 +38,6 @@ public class BooleanModel {
     public void setMaxDocID(int maxDocID) {
         BooleanModel.maxDocID = maxDocID;
     }
-
-    /**
-     * Menetapkan referensi InvertedIndex yang akan digunakan untuk mengambil 
-     * posting list pada operasi jamak (multiple terms).
-     * 
-     * * @param invertedIndex Objek InvertedIndex yang aktif.
-     */
-    public void setInvertedIndex(InvertedIndex invertedIndex) {
-        BooleanModel.invertedIndex = invertedIndex;
-    }
-
-    /**
-     * Menautkan ulang referensi (pointer) 'next' dan 'skip' pada sebuah posting list baru.
-     * Hal ini diperlukan karena operasi logika (seperti intersect atau union) menghasilkan 
-     * objek node baru yang belum memiliki struktur keterhubungan pointer.
-     * 
-     * @param nodes List dari PostingNode yang baru saja di-generate.
-     * 
-     * @return List yang sama, namun setiap node di dalamnya sudah terhubung dengan 
-     * pointer 'next' dan 'skip'.
-     */
-    public List<PostingNode> assignPointer(List<PostingNode> nodes) {
-        if (nodes == null || nodes.isEmpty())
-            return nodes;
-
-        int n = nodes.size();
-        int skipInterval = (int) Math.sqrt(n);
-
-        for (int i = 0; i < n - 1; i++) {
-            nodes.get(i).setNext(nodes.get(i + 1));
-        }
-        nodes.get(n - 1).setNext(null);
-
-        for (int i = 0; i < n; i++) {
-            int skipTarget = i + skipInterval;
-            if (skipTarget < n) {
-                nodes.get(i).setSkip(nodes.get(skipTarget));
-            } else {
-                nodes.get(i).setSkip(null);
-            }
-        }
-
-        return nodes;
-    }
-
 
     /**
      * Melakukan operasi irisan (AND) antara dua posting list.
@@ -122,7 +77,6 @@ public class BooleanModel {
         }
         return answer;
     }
-
 
     /**
      * Melakukan operasi gabungan (OR) antara dua posting list.
@@ -191,6 +145,50 @@ public class BooleanModel {
             }
         }
         return result;
+    }
+
+    /**
+     * Menetapkan referensi InvertedIndex yang akan digunakan untuk mengambil 
+     * posting list pada operasi jamak (multiple terms).
+     * 
+     * * @param invertedIndex Objek InvertedIndex yang aktif.
+     */
+    public void setInvertedIndex(InvertedIndex invertedIndex) {
+        BooleanModel.invertedIndex = invertedIndex;
+    }
+
+    /**
+     * Menautkan ulang referensi (pointer) 'next' dan 'skip' pada sebuah posting list baru.
+     * Hal ini diperlukan karena operasi logika (seperti intersect atau union) menghasilkan 
+     * objek node baru yang belum memiliki struktur keterhubungan pointer.
+     * 
+     * @param nodes List dari PostingNode yang baru saja di-generate.
+     * 
+     * @return List yang sama, namun setiap node di dalamnya sudah terhubung dengan 
+     * pointer 'next' dan 'skip'.
+     */
+    public List<PostingNode> assignPointer(List<PostingNode> nodes) {
+        if (nodes == null || nodes.isEmpty())
+            return nodes;
+
+        int n = nodes.size();
+        int skipInterval = (int) Math.sqrt(n);
+
+        for (int i = 0; i < n - 1; i++) {
+            nodes.get(i).setNext(nodes.get(i + 1));
+        }
+        nodes.get(n - 1).setNext(null);
+
+        for (int i = 0; i < n; i++) {
+            int skipTarget = i + skipInterval;
+            if (skipTarget < n) {
+                nodes.get(i).setSkip(nodes.get(skipTarget));
+            } else {
+                nodes.get(i).setSkip(null);
+            }
+        }
+
+        return nodes;
     }
 
     /**

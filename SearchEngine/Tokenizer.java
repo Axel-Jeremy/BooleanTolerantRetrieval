@@ -8,7 +8,7 @@ import java.util.List;
  * 
  * Sumber: Membuat sendiri dengan bantuan LLM
  * 
- * @author Axel, Keane
+ * @author Axel, Keane, Alex
  */
 public class Tokenizer {
 

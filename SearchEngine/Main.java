@@ -8,7 +8,7 @@ import java.util.*;
  */
 public class Main {
     public static void main(String[] args) {
-        String folderPath = "DataSet";
+        String folderPath = "../DataSet";
 
         Scanner sc = new Scanner(System.in);
         int totalDocs = numberDocument(sc);

@@ -9,7 +9,7 @@ import java.util.List;
  * 
  * Sumber: Membuat sendiri
  * 
- * @author Axel, Keane
+ * @author Axel, Keane, Alex
  */
 public class TextPreprocessor {
 
