@@ -1,85 +1,166 @@
 import java.util.*;
 
+/**
+ * Kelas Main digunakan untuk menjalankan
+ * aplikasi mesin pencari (Information Retrieval). Kelas ini mengatur alur
+ * mulai dari pembacaan dokumen, pembangunan indeks, hingga interaksi
+ * kueri dengan pengguna.
+ */
 public class Main {
     public static void main(String[] args) {
+        String folderPath = "DataSet";
 
-        // 1. Baca semua dokumen
-        DocumentReader reader = new DocumentReader("../DataSet");
-        Map<Integer, String> documents = reader.readAll(100);
+        Scanner sc = new Scanner(System.in);
+        int totalDocs = numberDocument(sc);
 
-        if (documents.isEmpty()) {
-            System.out.println("Tidak ada dokumen yang terbaca. Cek path folder.");
+        // baca semua dokumen dari direktori
+        Map<Integer, String> documents = readDocuments(folderPath, totalDocs);
+
+        if (documents == null || documents.isEmpty()) {
+            System.out.println("Document is empty / wrong path.");
             return;
         }
 
-        // 2. Inisialisasi komponen
+        // bangun inverted index
+        InvertedIndex invertedIndex = buildInvertedIndex(documents, totalDocs);
+
+        // jalankan search engine
+        run(invertedIndex, sc);
+    }
+
+    /**
+     * Method untuk meminta input dari pengguna mengenai jumlah dokumen
+     * yang ingin diindeks dari dalam dataset.
+     * 
+     * @param sc Objek Scanner yang digunakan untuk membaca input dari console.
+     * 
+     * @return Nilai integer yang merepresentasikan total dokumen yang akan diproses.
+     */
+    private static int numberDocument(Scanner sc) {
+        System.out.print("Enter total documents indexed in dataset (max 1400): ");
+        int totalDocs = sc.nextInt();
+        sc.nextLine();
+
+        return totalDocs;
+    }
+
+    /**
+     * Membaca kumpulan dokumen teks dari direktori yang telah ditentukan.
+     * 
+     * @param folderPath Path atau lokasi folder yang menyimpan dokumen.
+     * @param totalDocs  Jumlah dokumen maksimal yang akan dicoba untuk dibaca.
+     * 
+     * @return Map yang memetakan ID dokumen (Integer) dengan isi teksnya (String).
+     */
+    private static Map<Integer, String> readDocuments(String folderPath, int totalDocs) {
+        System.out.println("Reading document from " + folderPath + " folder...");
+        DocumentReader reader = new DocumentReader(folderPath);
+        return reader.readAll(totalDocs);
+    }
+
+    /**
+     * Membangun Inverted Index berdasarkan dokumen-dokumen yang telah dibaca.
+     * Proses ini mencakup tokenisasi, case folding, stemming, penyimpanan raw terms
+     * untuk koreksi ejaan, serta inisiasi skip pointer.
+     * 
+     * @param documents Map yang berisi kumpulan ID dokumen beserta teksnya.
+     * @param totalDocs Jumlah dokumen untuk batas iterasi (memastikan urutan
+     *                  posting list).
+     * 
+     * @return Objek InvertedIndex yang sudah terisi dan siap digunakan.
+     */
+    private static InvertedIndex buildInvertedIndex(Map<Integer, String> documents, int totalDocs) {
+        System.out.println("Building Inverted Index...");
+
         TextPreprocessor preprocessor = new TextPreprocessor();
         InvertedIndex invertedIndex = new InvertedIndex();
 
-        // 3. Bangun inverted index — iterasi dari docID 1 ke 100 agar posting list
-        // sorted
-        System.out.println("Membangun inverted index...");
-        for (int docID = 1; docID <= 100; docID++) {
+        // Iterasi berurutan dari 1 agar ID di dalam posting list terurut dengan benar
+        for (int docID = 1; docID <= totalDocs; docID++) {
             if (!documents.containsKey(docID))
                 continue;
 
             String content = documents.get(docID);
-            List<String> rawTerms = preprocessor.getRawTerms(content);
 
+            // Mengambil dan menyimpan raw terms (tanpa stemming) ke vocabulary
+            List<String> rawTerms = preprocessor.getRawTerms(content);
             for (String raw : rawTerms) {
                 invertedIndex.addRawTerm(raw);
             }
-            List<String> terms = preprocessor.process(documents.get(docID));
+
+            // Memproses teks secara penuh (termasuk stemming) untuk dipindahkan ke posting list
+            List<String> terms = preprocessor.process(content);
             for (String term : terms) {
                 invertedIndex.addDocument(term, docID);
             }
         }
 
-        // 4. Pasang skip pointer setelah semua dokumen selesai diindeks
+        // Pasang skip pointer setelah struktur indeks untuk semua dokumen selesai
         invertedIndex.assignSkipPointer();
-        
-        System.out.println("Inverted index selesai dibangun.");
+        System.out.println("Inverted index has been built succesfully.");
 
-        // 5. Set maxDocID ke BooleanModel
+        return invertedIndex;
+    }
+
+    /**
+     * Menginisialisasi komponen pencarian (Boolean Model & Tolerant Retrieval)
+     * dan menjalankan perulangan (loop) untuk terus menerima kueri dari pengguna.
+     * 
+     * @param invertedIndex Objek InvertedIndex yang digunakan sebagai rujukan
+     * pencarian.
+     */
+    private static void run(InvertedIndex invertedIndex, Scanner sc) {
+        // Menginisialisasi Boolean Model untuk evaluasi logical operator
         BooleanModel model = new BooleanModel();
-        TolerantRetrieval tolerant = new TolerantRetrieval();
-
         model.setInvertedIndex(invertedIndex);
         model.setMaxDocID(invertedIndex.getMaxDocID());
 
+        // Menginisialisasi Tolerant Retrieval untuk fitur koreksi ejaan (typo)
+        TolerantModel tolerant = new TolerantModel();
         tolerant.setInvertedIndex(invertedIndex);
 
-        // 6. Loop query — user bisa input query berulang kali
-        Scanner scanner = new Scanner(System.in);
+        System.out.println("---------------------------------------------");
+        System.out.println("         Boolean Tolerant Retrieval          ");
+        System.out.println("---------------------------------------------");
+
         while (true) {
-            System.out.print("\nMasukkan query (atau 'exit' untuk keluar): ");
-            String input = scanner.nextLine().trim();
+            System.out.print("\nEnter query (type 'exit' to cancel): ");
+            String input = sc.nextLine().trim();
 
-            if (input.equalsIgnoreCase("exit"))
+            if (input.equalsIgnoreCase("exit")) {
                 break;
-            if (input.isEmpty())
+            }
+            if (input.isEmpty()) {
                 continue;
+            }
 
-            // 7. Proses query
             Query query = new Query(input);
             query.setInvertedIndex(invertedIndex);
-            query.setModel(model);
             query.setTolerantModel(tolerant);
+            // query.setModel(model);
 
-            List<PostingNode> result = query.preProcess();
+            List<PostingNode> result = query.process();
 
-            // 8. Tampilkan hasil
-            if (result == null || result.isEmpty()) {
-                System.out.println("Tidak ada dokumen yang cocok.");
-            } else {
-                System.out.print("Dokumen yang relevan: ");
-                for (PostingNode node : result) {
-                    System.out.print(node.getDocID() + " ");
-                }
-                System.out.println();
-            }
+            printResult(result);
         }
+    }
 
-        scanner.close();
+    /**
+     * Formatting dan mencetak daftar dokumen yang relevan (hasil pencarian) ke
+     * console.
+     * 
+     * * @param result List dari PostingNode yang merepresentasikan ID dokumen hasil
+     * evaluasi kueri.
+     */
+    private static void printResult(List<PostingNode> result) {
+        if (result == null || result.isEmpty()) {
+            System.out.println("--> There is no relevant document.");
+        } else {
+            System.out.print("--> List of relevant document(s): ");
+            for (PostingNode node : result) {
+                System.out.print(node.getDocID() + " ");
+            }
+            System.out.println();
+        }
     }
 }
